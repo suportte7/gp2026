@@ -1,261 +1,698 @@
-<!DOCTYPE html><html lang="pt-PT"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sistema de Gestão</title>
-<style>
-:root{--primary:#1e40af;--bg:#f1f5f9;--card:#ffffff;--border:#cbd5e1;--text:#0f172a;--text-muted:#64748b;--success:#15803d;--danger:#dc2626;--warning:#d97706;}
-[data-theme="verde"]{--primary:#065f46;--bg:#f0fdf4;--border:#bbf7d0;--text:#064e3b;} [data-theme="roxo"]{--primary:#6b21a8;--bg:#faf5ff;--border:#e9d5ff;} [data-theme="dark"]{--primary:#3b82f6;--bg:#0f172a;--card:#1e293b;--border:#334155;--text:#f8fafc;}
-*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,sans-serif;} body{background:var(--bg);color:var(--text);padding-bottom:30px;transition:0.3s;}
-.login-wrapper{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;}
-.login-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px 24px;width:100%;max-width:400px;text-align:center;}
-.login-card h1{color:var(--primary);font-size:1.5rem;margin-bottom:8px;} .login-erro{color:var(--danger);font-size:0.85rem;font-weight:bold;margin-top:10px;display:none;background:rgba(220,38,38,0.1);padding:8px;border-radius:6px;}
-.app-header{background:var(--primary);color:white;padding:12px 16px;font-weight:bold;position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;}
-.menu-btn,.theme-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;padding:6px 12px;border-radius:20px;cursor:pointer;}
-.ano-badge{background:rgba(0,0,0,0.2);padding:2px 6px;border-radius:4px;font-size:0.7rem;font-weight:normal;} .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:998;}
-.drawer-menu{position:fixed;top:0;left:-280px;width:280px;height:100%;background:var(--card);z-index:999;display:flex;flex-direction:column;transition:left 0.3s;} .drawer-menu.open{left:0;}
-.drawer-header{background:var(--primary);color:white;padding:20px;font-size:1.2rem;font-weight:bold;display:flex;justify-content:space-between;} .drawer-close{background:none;border:none;color:white;font-size:1.5rem;}
-.drawer-items{display:flex;flex-direction:column;padding:12px 0;overflow-y:auto;flex:1;} .drawer-item{background:none;border:none;text-align:left;padding:14px 20px;font-size:1rem;font-weight:600;color:var(--text);border-bottom:1px solid var(--border);}
-.drawer-item.active{background:var(--bg);color:var(--primary);} .container{max-width:720px;margin:16px auto;padding:0 16px;display:flex;flex-direction:column;gap:16px;}
-.tab-content{display:none;} .tab-content.active{display:block;} .card{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:16px;}
-h2{font-size:1.15rem;color:var(--primary);margin-bottom:12px;border-bottom:2px solid var(--border);padding-bottom:6px;} .grid{display:grid;grid-template-columns:1fr;gap:12px;} .field{display:flex;flex-direction:column;gap:4px;}
-label{font-size:0.85rem;font-weight:600;color:var(--text-muted);} input,select,textarea{padding:12px;border:1px solid var(--border);border-radius:8px;font-size:1rem;width:100%;outline:none;background:var(--bg);color:var(--text);text-transform:uppercase;}
-input::placeholder{text-transform:none;} button.btn{background:var(--primary);color:#fff;border:none;padding:14px;border-radius:8px;font-weight:600;cursor:pointer;width:100%;}
-button.btn.sec{background:var(--text-muted);} button.btn.success{background:var(--success);} button.btn.danger{background:var(--danger);} .btn-group{display:flex;gap:10px;margin-top:8px;}
-.action-btn{background:none;border:none;font-size:1.2rem;} .item-card{border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px;background:var(--bg);}
-.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:0.75rem;background:var(--primary);color:white;} .alerta-formato{color:var(--warning);font-size:0.8rem;font-weight:bold;}
-.alerta-duplicado-box{background:rgba(220,38,38,0.08);border:1px dashed var(--danger);padding:8px;border-radius:6px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;}
-.btn-mesclar{background:var(--danger);color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;} .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;padding:16px;}
-.modal-box{background:var(--card);border-radius:12px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;} .lider-checkbox-list{max-height:250px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:12px;}
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;} .stat-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;} .stat-box span{font-size:1.3rem;font-weight:bold;color:var(--primary);}
-.chips-container{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;} .chip{padding:6px 12px;border-radius:20px;border:1px solid var(--primary);background:transparent;color:var(--primary);font-size:0.8rem;font-weight:bold;cursor:pointer;} .chip.active{background:var(--primary);color:white;}
-.premium-bar-wrap{background:var(--bg);padding:12px;border-radius:10px;margin-bottom:10px;border:1px solid var(--border);} .premium-bar-bg{height:12px;background:var(--border);border-radius:6px;margin-top:6px;} .premium-bar-fill{height:100%;border-radius:6px;}
-</style></head><body>
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Gestão de Fichas</title>
+  <style>
+    :root {
+      --primary: #1e40af; --bg: #f1f5f9; --card: #ffffff; --border: #cbd5e1; 
+      --text: #0f172a; --text-muted: #64748b; --success: #15803d; 
+      --danger: #dc2626; --warning: #d97706;
+    }
+    [data-theme="verde"] { --primary: #065f46; --bg: #f0fdf4; --border: #bbf7d0; --text: #064e3b; }
+    [data-theme="roxo"] { --primary: #6b21a8; --bg: #faf5ff; --border: #e9d5ff; --text: #3b0764; }
+    [data-theme="dark"] { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f8fafc; }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 30px; transition: 0.3s; }
+    
+    .login-wrapper { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
+    .login-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 32px 24px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    .login-card h1 { color: var(--primary); font-size: 1.5rem; margin-bottom: 8px; }
+    .login-erro { color: var(--danger); font-size: 0.85rem; font-weight: bold; margin-top: 10px; display: none; background: rgba(220, 38, 38, 0.1); padding: 8px; border-radius: 6px; }
+    
+    .app-header { background: var(--primary); color: white; padding: 12px 16px; font-weight: bold; position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; }
+    .menu-btn, .theme-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; }
+    .ano-badge { background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: normal; margin-top: 2px; display: inline-block; }
+    
+    .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 998; }
+    .drawer-menu { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--card); z-index: 999; display: flex; flex-direction: column; transition: left 0.3s; }
+    .drawer-menu.open { left: 0; }
+    .drawer-header { background: var(--primary); color: white; padding: 20px; font-size: 1.2rem; font-weight: bold; display: flex; justify-content: space-between; }
+    .drawer-close { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+    .drawer-items { display: flex; flex-direction: column; padding: 12px 0; overflow-y: auto; flex: 1; }
+    .drawer-item { background: none; border: none; text-align: left; padding: 14px 20px; font-size: 1rem; font-weight: 600; color: var(--text); cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
+    .drawer-item.active { background: var(--bg); color: var(--primary); }
+    .drawer-item.logout { color: var(--danger); margin-top: auto; border-bottom: none; border-top: 1px solid var(--border); }
+    
+    .container { max-width: 720px; margin: 16px auto; padding: 0 16px; display: flex; flex-direction: column; gap: 16px; }
+    .tab-content { display: none; } .tab-content.active { display: block; animation: fadeIn 0.3s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 16px; }
+    h2 { font-size: 1.15rem; color: var(--primary); margin-bottom: 12px; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-align: left; }
+    input, select, textarea { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; width: 100%; outline: none; background: var(--bg); color: var(--text); text-transform: uppercase; }
+    input::placeholder { text-transform: none; }
+    
+    button.btn { background: var(--primary); color: #fff; border: none; padding: 14px; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; width: 100%; }
+    button.btn.sec { background: var(--text-muted); } button.btn.success { background: var(--success); } button.btn.danger { background: var(--danger); }
+    .btn-group { display: flex; gap: 10px; margin-top: 8px; }
+    .action-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 4px 8px; }
+    
+    .item-card { border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 10px; background: var(--bg); }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; background: var(--primary); color: white; font-weight: bold; }
+    .item-details { font-size: 0.9rem; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+    
+    .alerta-formato { color: var(--warning); font-size: 0.8rem; font-weight: bold; margin-top: 6px; }
+    .alerta-duplicado-box { background: rgba(220, 38, 38, 0.08); border: 1px dashed var(--danger); padding: 8px; border-radius: 6px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .btn-mesclar { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 999; align-items: center; justify-content: center; padding: 16px; }
+    .modal-box { background: var(--card); border-radius: 12px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .lider-checkbox-list { max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--bg); margin-bottom: 12px; }
+    
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .stat-box { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+    .stat-box span { font-size: 1.3rem; font-weight: bold; color: var(--primary); display: block; margin-top: 4px; }
+    .chips-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+    .chip { padding: 6px 12px; border-radius: 20px; border: 1px solid var(--primary); background: transparent; color: var(--primary); font-size: 0.8rem; font-weight: bold; cursor: pointer; }
+    .chip.active { background: var(--primary); color: white; }
+    .premium-bar-wrap { background: var(--bg); padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border); }
+    .premium-bar-bg { height: 12px; background: var(--border); border-radius: 6px; overflow: hidden; margin-top: 6px; }
+    .premium-bar-fill { height: 100%; border-radius: 6px; transition: width 1s; }
+    .versao-rodape { text-align: center; margin-top: 30px; font-size: 0.75rem; color: var(--text-muted); opacity: 0.6; user-select: none; }
+  </style>
+</head>
+<body>
 
 <div id="login-screen" class="login-wrapper">
-  <div class="login-card"><h1>🔐 Acesso Restrito</h1><p>Insira a senha para aceder.</p><div class="field"><input type="password" id="input-senha-login" style="text-transform:none;text-align:center;"></div><div id="login-erro" class="login-erro">Senha incorreta!</div><button class="btn success" style="margin-top:20px;" onclick="fazerLogin()">Entrar</button></div>
+  <div class="login-card">
+    <h1>🔐 Acesso Restrito</h1>
+    <p>Insira a palavra-passe para aceder ao sistema.</p>
+    <div class="field">
+      <input type="password" id="input-senha-login" placeholder="A sua palavra-passe..." autocapitalize="off" style="text-transform: none; text-align: center;">
+    </div>
+    <div id="login-erro" class="login-erro">Senha incorreta! Tente novamente.</div>
+    <button class="btn success" style="margin-top: 20px;" onclick="fazerLogin()">Entrar no Sistema</button>
+  </div>
 </div>
 
-<div id="app-content" style="display:none;">
+<div id="app-content" style="display: none;">
   <div class="app-header">
-    <div style="display:flex;align-items:center;gap:10px;"><button class="menu-btn" onclick="toggleDrawer()">☰</button>
-      <div style="display:flex;flex-direction:column;"><span style="font-size:1.1rem;">Gestão Fichas <span id="header-version" style="font-size:0.6rem;"></span></span><div class="ano-badge">Ano: <span id="header-ano-text"></span></div></div>
-    </div><button class="theme-btn" onclick="ciclarTema()">🌓 Tema</button>
+    <div style="display:flex; align-items:center; gap: 10px;">
+      <button class="menu-btn" onclick="toggleDrawer()">☰</button>
+      <div style="display:flex; flex-direction:column; align-items:flex-start;">
+        <span style="font-size: 1.1rem;">Gestão de Fichas <span id="header-version" style="font-size:0.6rem; opacity:0.8;"></span></span>
+        <div class="ano-badge">Ano Base: <span id="header-ano-text"></span></div>
+      </div>
+    </div>
+    <button class="theme-btn" onclick="ciclarTema()">🌓 Tema</button>
   </div>
 
   <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
   <div class="drawer-menu" id="drawer-menu">
-    <div class="drawer-header">Menu <button class="drawer-close" onclick="toggleDrawer()">✕</button></div>
+    <div class="drawer-header">Menu Principal <button class="drawer-close" onclick="toggleDrawer()">✕</button></div>
     <div class="drawer-items">
-      <button class="drawer-item active" onclick="switchTab('tab-lideres',this)">👤 Líderes</button>
-      <button class="drawer-item" onclick="switchTab('tab-cadastrar',this)">✍️ Novo Cadastro</button>
-      <button class="drawer-item" onclick="switchTab('tab-importar',this)">📸 Importação & IA</button>
-      <button class="drawer-item" onclick="switchTab('tab-banco',this)">🗂️ Banco Completo</button>
-      <button class="drawer-item" onclick="switchTab('tab-relatorios',this)">🖨️ Relatórios (PDF)</button>
-      <button class="drawer-item" onclick="switchTab('tab-graficos',this)">📊 Dashboard</button>
-      <button class="drawer-item" onclick="switchTab('tab-ferramentas',this)">🛠️ Configurações</button>
-      <button class="drawer-item logout" onclick="sairSistema()">🚪 Sair</button>
+      <button class="drawer-item active" onclick="switchTab('tab-lideres', this)">👤 Líderes</button>
+      <button class="drawer-item" onclick="switchTab('tab-cadastrar', this)">✍️ Novo Cadastro</button>
+      <button class="drawer-item" onclick="switchTab('tab-importar', this)">📸 Importação & IA</button>
+      <button class="drawer-item" onclick="switchTab('tab-banco', this)">🗂️ Banco Completo</button>
+      <button class="drawer-item" onclick="switchTab('tab-relatorios', this)">🖨️ Relatórios PDF</button>
+      <button class="drawer-item" onclick="switchTab('tab-graficos', this)">📊 Dashboard</button>
+      <button class="drawer-item" onclick="switchTab('tab-ferramentas', this)">🛠️ Configurações</button>
+      <button class="drawer-item logout" onclick="sairSistema()">🚪 Sair do Sistema</button>
     </div>
   </div>
 
   <div class="container">
+    <!-- Líderes -->
     <div id="tab-lideres" class="tab-content active">
-      <div class="card"><h2>👤 Responsável</h2><form id="form-lider" class="grid">
-        <div class="field"><label>Nome:</label><input type="text" id="lider-nome" required></div>
-        <div class="field"><label>Local:</label><input type="text" id="lider-local" required></div>
-        <div class="field"><label>Contato:</label><input type="text" id="lider-contato" required></div>
-        <div style="display:flex;gap:10px;"><div class="field" style="flex:1"><label>Fixo:</label><input type="number" step="0.01" id="lider-valor" style="text-transform:none;"></div><div class="field" style="flex:1"><label>Por Pessoa:</label><input type="number" step="0.01" id="lider-valor-pessoa" style="text-transform:none;"></div></div>
-        <div class="field"><label>Obs:</label><input type="text" id="lider-obs"></div><button type="submit" class="btn">Salvar</button></form></div>
-      <div class="card"><h2>📋 Lideranças</h2><div id="lista-lideres"></div></div>
+      <div class="card">
+        <h2>👤 Cadastrar Responsável</h2>
+        <form id="form-lider" class="grid">
+          <div class="field"><label>Nome do Responsável:</label><input type="text" id="lider-nome" required></div>
+          <div class="field"><label>Local / Região:</label><input type="text" id="lider-local" required></div>
+          <div class="field"><label>Contato:</label><input type="text" id="lider-contato" required></div>
+          <div style="display: flex; gap: 10px;">
+            <div class="field" style="flex:1"><label>Valor Fixo:</label><input type="number" step="0.01" id="lider-valor" placeholder="0.00" style="text-transform: none;"></div>
+            <div class="field" style="flex:1"><label>Por Pessoa:</label><input type="number" step="0.01" id="lider-valor-pessoa" placeholder="Ex: 50" style="text-transform: none;"></div>
+          </div>
+          <div class="field"><label>Observação (Opcional):</label><input type="text" id="lider-obs"></div>
+          <button type="submit" class="btn">Salvar Responsável</button>
+        </form>
+      </div>
+      <div class="card">
+        <h2>📋 Responsáveis Cadastrados</h2>
+        <div id="lista-lideres"></div>
+      </div>
     </div>
 
-    <div id="tab-cadastrar" class="tab-content"><div class="card"><h2>✍️ Cadastro Manual</h2><form id="form-pessoa-manual" class="grid">
-      <div class="field"><label>Líder:</label><select id="cad-pessoa-lider" required></select></div>
-      <div class="field"><label>Nome:</label><input type="text" id="cad-nome" required></div>
-      <div class="field"><label>Fone:</label><input type="text" id="cad-fone" style="text-transform:none;"></div>
-      <div class="field"><label>CPF:</label><input type="text" id="cad-cpf" style="text-transform:none;"></div>
-      <div class="field"><label>Endereço:</label><input type="text" id="cad-endereco"></div><div class="field"><label>Bairro:</label><input type="text" id="cad-bairro"></div>
-      <div class="field"><label>Título:</label><input type="text" id="cad-titulo" style="text-transform:none;"></div>
-      <div style="display:flex;gap:10px;"><div class="field" style="flex:1"><label>Zona:</label><input type="text" id="cad-zona" style="text-transform:none;"></div><div class="field" style="flex:1"><label>Seção:</label><input type="text" id="cad-secao" style="text-transform:none;"></div></div>
-      <button type="submit" class="btn success">Salvar</button></form></div></div>
+    <!-- Cadastro Manual -->
+    <div id="tab-cadastrar" class="tab-content">
+      <div class="card">
+        <h2>✍️ Cadastrar Pessoa (Manual)</h2>
+        <form id="form-pessoa-manual" class="grid">
+          <div class="field"><label>Responsável / Líder:</label><select id="cad-pessoa-lider" required></select></div>
+          <div class="field"><label>Nome Completo:</label><input type="text" id="cad-nome" required></div>
+          <div class="field"><label>Telefone:</label><input type="text" id="cad-fone" style="text-transform: none;"></div>
+          <div class="field"><label>CPF:</label><input type="text" id="cad-cpf" style="text-transform: none;"></div>
+          <div class="field"><label>Endereço:</label><input type="text" id="cad-endereco"></div>
+          <div class="field"><label>Bairro:</label><input type="text" id="cad-bairro"></div>
+          <div class="field"><label>Título de Eleitor:</label><input type="text" id="cad-titulo" style="text-transform: none;"></div>
+          <div style="display:flex;gap:10px;">
+            <div class="field" style="flex:1"><label>Zona:</label><input type="text" id="cad-zona" style="text-transform: none;"></div>
+            <div class="field" style="flex:1"><label>Seção:</label><input type="text" id="cad-secao" style="text-transform: none;"></div>
+          </div>
+          <button type="submit" class="btn success" style="margin-top: 8px;">Salvar Pessoa</button>
+        </form>
+      </div>
+    </div>
 
+    <!-- Importar IA -->
     <div id="tab-importar" class="tab-content">
-      <div class="card" style="border:1px solid var(--primary);"><h2>🤖 Opção 1: Leitura IA</h2>
-        <div class="field"><label>Escolha o Motor de Inteligência:</label>
-          <select id="select-ia-motor" style="text-transform:none; font-weight:bold; color:var(--primary);">
-            <option value="groq">⚡ Groq (Llama 3.2 Vision) - Recomendado</option>
+      <div class="card" style="border: 1px solid var(--primary);">
+        <h2>🤖 Leitura por IA (Híbrida)</h2>
+        <div class="field" style="margin-bottom: 12px;">
+          <label>Escolha o Motor de Inteligência:</label>
+          <select id="select-ia-motor" style="text-transform: none; font-weight: bold; color: var(--primary);">
+            <option value="groq">⚡ Groq (Llama 3.2 Vision) - Mais Rápido</option>
             <option value="gemini">🌐 Google Gemini</option>
           </select>
         </div>
-        <div class="field"><label>Líder:</label><select id="select-lider-ia-foto"></select></div>
-        <div class="field"><label>Foto:</label><input type="file" id="input-foto-ficha" accept="image/*" capture="environment"></div>
-        <button type="button" id="btn-processar-foto" class="btn primary" onclick="processarImagemHibrida()">📷 Processar Ficha</button></div>
-      <div class="card"><h2>💬 Opção 2: Importar via Texto</h2>
-        <div class="field"><label>Líder:</label><select id="select-lider-ia-texto"></select></div><div class="field"><label>JSON:</label><textarea id="json-input" rows="4" style="text-transform:none;"></textarea></div>
-        <button type="button" id="btn-iniciar-conferencia" class="btn success">✔ Importar Texto</button></div>
+        <div class="field" style="margin-bottom: 12px;"><label>Vincular a qual Líder?</label><select id="select-lider-ia-foto" required></select></div>
+        <div class="field" style="margin-bottom: 12px;"><label>Foto da Ficha:</label><input type="file" id="input-foto-ficha" accept="image/*" capture="environment" style="text-transform: none; padding: 8px;"></div>
+        <button type="button" id="btn-processar-foto" class="btn primary" onclick="processarImagemIA()">📷 Processar Ficha</button>
+      </div>
+      <div class="card">
+        <h2>💬 Importar via Chat (JSON)</h2>
+        <div class="field" style="margin-bottom: 12px;"><label>Vincular a qual Líder?</label><select id="select-lider-ia-texto" required></select></div>
+        <div class="field" style="margin-bottom: 16px;"><label>Cole o Código (JSON):</label><textarea id="json-input" rows="4" style="text-transform: none;"></textarea></div>
+        <button type="button" id="btn-iniciar-conferencia" class="btn success" onclick="iniciarImportacaoJSON()">✔ Importar Texto</button>
+      </div>
     </div>
 
-    <div id="tab-banco" class="tab-content"><div class="card"><h2>🗂️ Banco (<span id="total-registos">0</span>)</h2>
-      <div class="field" style="margin-bottom:12px;"><input type="text" id="busca-banco" placeholder="Buscar..." oninput="renderizarPessoas(this.value)"></div>
-      <button type="button" id="btn-exportar-csv" class="btn sec">Baixar Planilha (CSV)</button><div id="lista-pessoas" style="margin-top:10px;"></div></div></div>
-
-    <div id="tab-relatorios" class="tab-content"><div class="card"><h2>🖨️ Imprimir A4</h2>
-      <div class="field" style="margin-bottom:16px;"><label>Modelo:</label><select id="tipo-relatorio"><option value="valores">Valores por Líder</option><option value="resumo">Resumo Quantidades</option><option value="cadastros">Lista Completa (Nomes)</option></select></div>
-      <div class="lider-checkbox-list" id="lista-lideres-imprimir"></div><button type="button" class="btn success" onclick="imprimirRelatorio()">🖨️ Gerar PDF</button></div></div>
-
-    <div id="tab-graficos" class="tab-content"><div class="card"><h2>📊 Dashboard</h2>
-      <div class="stat-grid"><div class="stat-box"><label>Fichas</label><span id="stat-total-pessoas">0</span></div><div class="stat-box"><label>Orçamento</label><span id="stat-total-orcamento">0,00</span></div></div>
-      <div class="chips-container" id="chips-filtros"></div><div id="grafico-2-container" style="display:flex;flex-direction:column;gap:4px;margin-top:20px;"></div></div></div>
-
-    <div id="tab-ferramentas" class="tab-content">
-      <div class="card"><h2>📜 Histórico de Atualizações</h2><button type="button" class="btn primary" onclick="abrirChangelog()">Ver Notas da Versão</button></div>
-      
-      <div class="card"><h2>⚙️ Configuração IA (Híbrida)</h2>
-        <div class="field"><label>Chave API (Groq) - Começa com gsk_:</label><input type="password" id="input-groq-key" style="text-transform:none;"></div>
-        <div class="field" style="margin-top:8px;"><label>Chave API (Gemini):</label><input type="password" id="input-api-key" style="text-transform:none;"></div>
-        <button type="button" class="btn success" style="margin-top:12px;" onclick="salvarApiKeys()">💾 Guardar Chaves</button>
+    <!-- Banco -->
+    <div id="tab-banco" class="tab-content">
+      <div class="card">
+        <h2>🗂️ Banco de Dados (<span id="total-registos">0</span>)</h2>
+        <div class="field" style="margin-bottom: 12px;"><input type="text" id="busca-banco" placeholder="🔍 Buscar nome/CPF..."></div>
+        <button type="button" id="btn-exportar-csv" class="btn sec" style="margin-bottom: 16px;">Baixar Planilha (Excel)</button>
+        <div id="lista-pessoas"></div>
       </div>
-      
-      <div class="card" style="border:1px solid var(--primary);"><h2>📅 Anos (Ciclos)</h2>
-        <div class="field"><select id="select-ano" onchange="mudarAno(this.value)" style="text-transform:none;"></select></div><button class="btn success" style="margin-top:10px;" onclick="abrirModalNovoAno()">Criar Novo Ano</button></div>
-      <div class="card"><h2>🛠️ Backup e Restauro</h2><div class="grid"><button class="btn" onclick="exportarBackupJSON()">💾 Descarregar Dados</button>
-        <div class="field"><label>Restaurar JSON:</label><input type="file" id="input-backup" accept=".json" onchange="importarBackupJSON(event)" style="text-transform:none;"></div></div></div>
-      <div class="card" style="border-color:var(--danger);"><h2 style="color:var(--danger);">⚠️ Apagar Ano</h2>
-        <div class="field"><input type="password" id="senha-apagar" placeholder="Senha..." style="text-transform:none;"></div><button class="btn danger" style="margin-top:10px;" onclick="apagarAnoAtual()">Apagar Banco Deste Ano</button></div>
+    </div>
+
+    <!-- Relatórios -->
+    <div id="tab-relatorios" class="tab-content">
+      <div class="card">
+        <h2>🖨️ Impressão A4 (PDF)</h2>
+        <div class="field" style="margin-bottom: 16px;">
+          <label>Modelo de Impressão:</label>
+          <select id="tipo-relatorio">
+            <option value="valores">Lista de Valores por Líder</option>
+            <option value="resumo">Lista Líder (Resumo de Quantidades)</option>
+            <option value="cadastros">Lista de Cadastros por Líder (Completa)</option>
+          </select>
+        </div>
+        <label>Selecione os líderes para a impressão:</label>
+        <div class="lider-checkbox-list" id="lista-lideres-imprimir"></div>
+        <button type="button" class="btn success" onclick="imprimirRelatorio()">🖨️ Gerar Documento</button>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="tab-graficos" class="tab-content">
+      <div class="card">
+        <h2>📊 Dashboard Interativo</h2>
+        <div class="stat-grid">
+          <div class="stat-box"><label>Fichas Filtro</label><span id="stat-total-pessoas">0</span></div>
+          <div class="stat-box"><label>Valores Filtro</label><span id="stat-total-orcamento">0,00</span></div>
+        </div>
+        <div style="margin-top: 16px; margin-bottom: 8px;"><label style="color: var(--primary);">🎯 Filtro:</label><div class="chips-container" id="chips-filtros"></div></div>
+        <div id="grafico-2-container" style="display: flex; flex-direction: column; gap: 4px; margin-top:20px;"></div>
+      </div>
+    </div>
+
+    <!-- Ferramentas -->
+    <div id="tab-ferramentas" class="tab-content">
+      <div class="card">
+        <h2>📜 Histórico de Atualizações</h2>
+        <button type="button" class="btn primary" onclick="abrirChangelog()">Ver Notas da Versão</button>
+      </div>
+      <div class="card">
+        <h2>⚙️ Configuração IA (Chaves)</h2>
+        <div class="field"><label>Chave API Groq (Começa com gsk_):</label><input type="password" id="input-groq-key" style="text-transform: none;"></div>
+        <div class="field" style="margin-top:8px;"><label>Chave API Gemini:</label><input type="password" id="input-api-key" style="text-transform: none;"></div>
+        <div class="btn-group" style="margin-top:12px;">
+          <button type="button" class="btn success" onclick="salvarApiKeys()">💾 Guardar Chaves</button>
+          <button type="button" class="btn sec" onclick="testarConexao()">🔌 Diagnóstico</button>
+        </div>
+      </div>
+      <div class="card" style="border: 1px solid var(--primary);">
+        <h2>📅 Gerenciador de Ciclos (Anos)</h2>
+        <div class="field"><label>Mudar de Ano:</label><select id="select-ano" style="text-transform: none; background: rgba(0,0,0,0.03);"></select></div>
+        <button type="button" class="btn success" style="margin-top:16px;" onclick="abrirModalNovoAno()">Criar Novo Ano</button>
+      </div>
+      <div class="card">
+        <h2>🛠️ Backup Geral</h2>
+        <div class="grid" style="gap: 14px;">
+          <button type="button" class="btn" onclick="exportarBackupJSON()">💾 Descarregar Backup (JSON)</button>
+          <div class="field"><label>Restaurar Backup:</label><input type="file" id="input-backup" accept=".json" style="text-transform: none;"></div>
+        </div>
+      </div>
+      <div class="card" style="border-color: var(--danger);">
+        <h2 style="color: var(--danger);">⚠️ Zona de Perigo</h2>
+        <div class="field"><label>Senha para apagar (wini):</label><input type="password" id="senha-apagar" autocapitalize="off" style="text-transform: none;"></div>
+        <button type="button" class="btn danger" style="margin-top: 12px;" onclick="apagarAnoAtual()">Apagar Banco Deste Ano</button>
+      </div>
+      <div class="versao-rodape">Gestão de Fichas - Versão <span id="footer-v-num"></span><br>Desenvolvido com Inteligência Artificial</div>
     </div>
   </div>
-</div>
+</div> 
 
-<!-- Modais -->
-<div class="modal-overlay" id="modal-novo-ano"><div class="modal-box"><h3 style="color:var(--primary);">📅 Novo Ano</h3>
-  <div class="field"><input type="number" id="input-novo-ano-modal" style="text-transform:none;" placeholder="Ex: 2028"></div>
-  <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;"><label><input type="radio" name="opc_mig" value="lideres" checked> Trazer Líderes (Zerar fichas)</label><label><input type="radio" name="opc_mig" value="tudo"> Clonar Tudo</label><label><input type="radio" name="opc_mig" value="zero"> Começar do Zero</label></div>
-  <div class="btn-group"><button class="btn success" onclick="confirmarNovoAno()">Criar</button><button class="btn sec" onclick="fecharModais()">Sair</button></div></div></div>
+<!-- Modais Fixos -->
+<div class="modal-overlay" id="modal-changelog"><div class="modal-box"><h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">📜 Versões</h3><div id="changelog-content" style="display:flex; flex-direction:column; max-height:50vh; overflow-y:auto; padding-right:10px; margin-top:10px;"></div><div class="btn-group" style="margin-top: 16px;"><button class="btn sec" onclick="fecharModais()">Fechar</button></div></div></div>
 
-<div class="modal-overlay" id="modal-mesclar"><div class="modal-box"><h3 style="color:var(--danger);">🔗 Mesclar Conflito</h3><div id="mesclar-opcoes" style="display:flex;flex-direction:column;gap:10px;"></div><div class="btn-group"><button class="btn success" onclick="confirmarMesclagem()">Mesclar</button><button class="btn sec" onclick="fecharModais()">Sair</button></div></div></div>
+<div class="modal-overlay" id="modal-novo-ano"><div class="modal-box"><h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">📅 Novo Ano</h3><div class="field"><label>Digite o Novo Ano:</label><input type="number" id="input-novo-ano-modal" style="text-transform: none;" placeholder="Ex: 2028"></div><div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;"><label style="display:flex; gap:10px; background:var(--bg); padding:12px; border-radius:8px; cursor:pointer;"><input type="radio" name="opcao_migracao" value="lideres" checked><div><strong>1. Trazer apenas Líderes</strong></div></label><label style="display:flex; gap:10px; background:var(--bg); padding:12px; border-radius:8px; cursor:pointer;"><input type="radio" name="opcao_migracao" value="tudo"><div><strong>2. Clonar Tudo</strong></div></label><label style="display:flex; gap:10px; background:var(--bg); padding:12px; border-radius:8px; cursor:pointer;"><input type="radio" name="opcao_migracao" value="zero"><div><strong>3. Começar do Zero</strong></div></label></div><div class="btn-group" style="margin-top: 16px;"><button class="btn success" onclick="confirmarNovoAno()">Criar</button><button class="btn sec" onclick="fecharModais()">Cancelar</button></div></div></div>
 
-<div class="modal-overlay" id="modal-conferencia"><div class="modal-box"><h3 style="color:var(--primary);">Conferir (<span id="modal-contador"></span>)</h3><div class="grid">
-  <div class="field"><label>Nome:</label><input type="text" id="conf-nome"></div><div class="field"><label>Fone:</label><input type="text" id="conf-fone" style="text-transform:none;"></div><div class="field"><label>CPF:</label><input type="text" id="conf-cpf" style="text-transform:none;"></div>
-  <div class="field"><label>Endereço:</label><input type="text" id="conf-endereco"></div><div class="field"><label>Bairro:</label><input type="text" id="conf-bairro"></div><div class="field"><label>Título:</label><input type="text" id="conf-titulo" style="text-transform:none;"></div>
-  <div style="display:flex;gap:10px;"><div class="field" style="flex:1"><label>Zona:</label><input type="text" id="conf-zona" style="text-transform:none;"></div><div class="field" style="flex:1"><label>Seção:</label><input type="text" id="conf-secao" style="text-transform:none;"></div></div>
-  </div><div class="btn-group"><button class="btn success" id="btn-aprovar-ficha">Salvar</button><button class="btn sec" id="btn-pular-ficha">Pular</button></div></div></div>
+<div class="modal-overlay" id="modal-mesclar"><div class="modal-box"><h3 style="color:var(--danger);border-bottom:1px solid var(--border);padding-bottom:10px;">🔗 Mesclar Conflitos</h3><div id="mesclar-opcoes" style="display:flex; flex-direction:column; gap:10px; max-height:40vh; overflow-y:auto; padding:4px;"></div><div class="btn-group" style="margin-top: 16px;"><button class="btn success" onclick="confirmarMesclagem()">Confirmar Mesclagem</button><button class="btn sec" onclick="fecharModais()">Cancelar</button></div></div></div>
 
-<div class="modal-overlay" id="modal-editar-pessoa"><div class="modal-box"><h3 style="color:var(--primary);">Editar Pessoa</h3><input type="hidden" id="edit-pessoa-id"><div class="grid">
-  <div class="field"><select id="edit-pessoa-lider"></select></div><div class="field"><input type="text" id="edit-pessoa-nome"></div><div class="field"><input type="text" id="edit-pessoa-fone" style="text-transform:none;"></div>
-  <div class="field"><input type="text" id="edit-pessoa-cpf" style="text-transform:none;"></div><div class="field"><input type="text" id="edit-pessoa-endereco"></div><div class="field"><input type="text" id="edit-pessoa-bairro"></div>
-  <div class="field"><input type="text" id="edit-pessoa-titulo" style="text-transform:none;"></div><div style="display:flex;gap:10px;"><div class="field" style="flex:1"><input type="text" id="edit-pessoa-zona" style="text-transform:none;"></div><div class="field" style="flex:1"><input type="text" id="edit-pessoa-secao" style="text-transform:none;"></div></div>
-  </div><div class="btn-group"><button class="btn success" onclick="salvarEdicaoPessoa()">Salvar</button><button class="btn sec" onclick="fecharModais()">Sair</button></div></div></div>
+<div class="modal-overlay" id="modal-conferencia"><div class="modal-box"><h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">Conferir (<span id="modal-contador"></span>)</h3><div class="grid"><div class="field"><label>Nome:</label><input type="text" id="conf-nome"></div><div class="field"><label>Fone:</label><input type="text" id="conf-fone" style="text-transform: none;"></div><div class="field"><label>CPF:</label><input type="text" id="conf-cpf" style="text-transform: none;"></div><div class="field"><label>Endereço:</label><input type="text" id="conf-endereco"></div><div class="field"><label>Bairro:</label><input type="text" id="conf-bairro"></div><div class="field"><label>Título:</label><input type="text" id="conf-titulo" style="text-transform: none;"></div><div style="display:flex;gap:10px;"><div class="field" style="flex:1"><label>Zona:</label><input type="text" id="conf-zona" style="text-transform: none;"></div><div class="field" style="flex:1"><label>Seção:</label><input type="text" id="conf-secao" style="text-transform: none;"></div></div></div><div class="btn-group"><button class="btn success" onclick="aprovarFichaIa()">Salvar</button><button class="btn sec" onclick="pularFichaIa()">Pular</button></div></div></div>
 
-<div class="modal-overlay" id="modal-editar-lider"><div class="modal-box"><h3 style="color:var(--primary);">Editar Líder</h3><input type="hidden" id="edit-lider-id"><div class="grid">
-  <div class="field"><input type="text" id="edit-lider-nome"></div><div class="field"><input type="text" id="edit-lider-local"></div><div class="field"><input type="text" id="edit-lider-contato" style="text-transform:none;"></div>
-  <div style="display:flex;gap:10px;"><div class="field" style="flex:1"><input type="number" step="0.01" id="edit-lider-valor" style="text-transform:none;"></div><div class="field" style="flex:1"><input type="number" step="0.01" id="edit-lider-valor-pessoa" style="text-transform:none;"></div></div>
-  <div class="field"><input type="text" id="edit-lider-obs"></div></div><div class="btn-group"><button class="btn success" onclick="salvarEdicaoLider()">Salvar</button><button class="btn sec" onclick="fecharModais()">Sair</button></div></div></div>
+<div class="modal-overlay" id="modal-editar-pessoa"><div class="modal-box"><h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">Editar Pessoa</h3><input type="hidden" id="edit-pessoa-id"><div class="grid"><div class="field"><label>Líder:</label><select id="edit-pessoa-lider"></select></div><div class="field"><label>Nome:</label><input type="text" id="edit-pessoa-nome"></div><div class="field"><label>Fone:</label><input type="text" id="edit-pessoa-fone" style="text-transform: none;"></div><div class="field"><label>CPF:</label><input type="text" id="edit-pessoa-cpf" style="text-transform: none;"></div><div class="field"><label>Endereço:</label><input type="text" id="edit-pessoa-endereco"></div><div class="field"><label>Bairro:</label><input type="text" id="edit-pessoa-bairro"></div><div class="field"><label>Título:</label><input type="text" id="edit-pessoa-titulo" style="text-transform: none;"></div><div style="display:flex;gap:10px;"><div class="field" style="flex:1"><label>Zona:</label><input type="text" id="edit-pessoa-zona" style="text-transform: none;"></div><div class="field" style="flex:1"><label>Seção:</label><input type="text" id="edit-pessoa-secao" style="text-transform: none;"></div></div></div><div class="btn-group"><button class="btn success" onclick="salvarEdicaoPessoa()">Salvar</button><button class="btn sec" onclick="fecharModais()">Cancelar</button></div></div></div>
 
-<div class="modal-overlay" id="modal-changelog"><div class="modal-box"><h3 style="color:var(--primary);">📜 Histórico</h3><div id="changelog-content" style="max-height:50vh;overflow-y:auto;margin-top:10px;"></div><button class="btn sec" style="margin-top:16px;" onclick="fecharModais()">Fechar</button></div></div>
+<div class="modal-overlay" id="modal-editar-lider"><div class="modal-box"><h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">Editar Líder</h3><input type="hidden" id="edit-lider-id"><div class="grid"><div class="field"><label>Nome:</label><input type="text" id="edit-lider-nome"></div><div class="field"><label>Local:</label><input type="text" id="edit-lider-local"></div><div class="field"><label>Contato:</label><input type="text" id="edit-lider-contato" style="text-transform: none;"></div><div style="display:flex;gap:10px;"><div class="field" style="flex:1"><label>Valor Fixo:</label><input type="number" step="0.01" id="edit-lider-valor" style="text-transform: none;"></div><div class="field" style="flex:1"><label>Valor por Pessoa:</label><input type="number" step="0.01" id="edit-lider-valor-pessoa" style="text-transform: none;"></div></div><div class="field"><label>Observação:</label><input type="text" id="edit-lider-obs"></div></div><div class="btn-group"><button class="btn success" onclick="salvarEdicaoLider()">Salvar</button><button class="btn sec" onclick="fecharModais()">Cancelar</button></div></div></div>
 
 <script>
-window.onerror=function(m,u,l){alert("Erro JS: "+m+" Linha:"+l);};
-const $=id=>document.getElementById(id); const VERSAO_ATUAL="3.7.0"; $('header-version').innerText=`v${VERSAO_ATUAL}`;
-function checkAuth(){if(sessionStorage.getItem('auth_fichas')==='1'){$('login-screen').style.display='none';$('app-content').style.display='block';}else{$('login-screen').style.display='flex';$('app-content').style.display='none';}}
-function fazerLogin(){if($('input-senha-login').value.trim().toLowerCase()==='wini'){sessionStorage.setItem('auth_fichas','1');$('login-erro').style.display='none';checkAuth();}else{$('login-erro').style.display='block';}}
-function sairSistema(){sessionStorage.removeItem('auth_fichas');checkAuth();} checkAuth();
-
-let anoAtual=localStorage.getItem('anoAtual')||'2026'; let anosDisp=JSON.parse(localStorage.getItem('anosDisponiveis')||'["2026"]'); let lideres=[], pessoas=[], loteEm=[], lIdAtv=null, iAtv=0;
-if(localStorage.getItem('bd_lideres')&&!localStorage.getItem('bd_lideres_2026')){localStorage.setItem('bd_lideres_2026',localStorage.getItem('bd_lideres'));localStorage.setItem('bd_pessoas_2026',localStorage.getItem('bd_pessoas'));}
-function carDados(){lideres=JSON.parse(localStorage.getItem(`bd_lideres_${anoAtual}`)||'[]');pessoas=JSON.parse(localStorage.getItem(`bd_pessoas_${anoAtual}`)||'[]');$('header-ano-text').innerText=anoAtual;$('span-ano-lista-lideres').innerText=anoAtual;$('select-ano').innerHTML=anosDisp.map(a=>`<option value="${a}" ${a===anoAtual?'selected':''}>${a}</option>`).join('');}
-function savDados(){localStorage.setItem(`bd_lideres_${anoAtual}`,JSON.stringify(lideres));localStorage.setItem(`bd_pessoas_${anoAtual}`,JSON.stringify(pessoas));}
-function mudarAno(v){anoAtual=v;localStorage.setItem('anoAtual',v);carDados();atLid();renPess();}
-function abrirModalNovoAno(){$('modal-novo-ano').style.display='flex';}
-function confirmarNovoAno(){let n=$('input-novo-ano-modal').value.trim();if(!n||anosDisp.includes(n))return;let o=document.querySelector('input[name="opc_mig"]:checked').value;let nl=[],np=[];if(o==='lideres')nl=lideres.map(l=>({...l,valor:0}));else if(o==='tudo'){nl=lideres.map(l=>({...l}));np=pessoas.map(p=>({...p}));}anosDisp.push(n);anosDisp.sort((a,b)=>b-a);localStorage.setItem('anosDisponiveis',JSON.stringify(anosDisp));localStorage.setItem(`bd_lideres_${n}`,JSON.stringify(nl));localStorage.setItem(`bd_pessoas_${n}`,JSON.stringify(np));fecharModais();mudarAno(n);alert('Ano Criado!');}
-
-function toggleDrawer(){$('drawer-menu').classList.toggle('open');$('drawer-overlay').style.display=$('drawer-menu').classList.contains('open')?'block':'none';}
-function switchTab(id,b){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('.drawer-item').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');if($('drawer-menu').classList.contains('open'))toggleDrawer();if(id==='tab-banco')renPess();if(id==='tab-graficos')iniDash();if(id==='tab-cadastrar'||id==='tab-importar')atSelLid();if(id==='tab-relatorios')atRel();}
-function fecharModais(){document.querySelectorAll('.modal-overlay').forEach(m=>m.style.display='none');}
-function ciclarTema(){let ts=['azul','verde','roxo','dark'];let i=ts.indexOf(localStorage.getItem('temaPref')||'azul');i=(i+1)%ts.length;let t=ts[i];if(t==='azul')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t);localStorage.setItem('temaPref',t);}
-if((localStorage.getItem('temaPref')||'azul')!=='azul')document.documentElement.setAttribute('data-theme',localStorage.getItem('temaPref'));
-function abrirChangelog(){$('changelog-content').innerHTML=`<div><strong>v3.7.0 (Atual)</strong>: Adicionado sistema Híbrido com motor Groq (Llama 3.2 Vision) para contornar bloqueios da Google.</div>`;$('modal-changelog').style.display='flex';}
-
-const maskF=v=>{let n=v.replace(/\D/g,'');if(n.length>0&&n.length<=9&&!n.startsWith('81'))n='81'+n;return n.replace(/^(\d{2})(\d)/g,'($1) $2').replace(/(\d{4,5})(\d{4})$/,'$1-$2');};
-const maskC=v=>v.replace(/\D/g,'').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
-['lider-contato','edit-lider-contato','conf-fone','cad-fone','edit-pessoa-fone'].forEach(id=>{if($(id))$(id).addEventListener('input',e=>e.target.value=maskF(e.target.value));});
-['cad-cpf','conf-cpf','edit-pessoa-cpf'].forEach(id=>{if($(id))$(id).addEventListener('input',e=>e.target.value=maskC(e.target.value));});
-
-function getDup(p1){let d=[],n1=(p1.nome||'').trim().toUpperCase(),c1=(p1.cpf||'').replace(/\D/g,'');pessoas.forEach(p2=>{if(p1.id===p2.id)return;let n2=(p2.nome||'').trim().toUpperCase(),c2=(p2.cpf||'').replace(/\D/g,'');if((n1&&n1.length>3&&n1===n2)||(c1&&c1.length===11&&c1===c2))d.push(p2);});return d;}
-function abrirModalMesclar(id){let p=pessoas.find(x=>x.id===id);loteEm=[p,...getDup(p)];$('mesclar-opcoes').innerHTML=loteEm.map((x,i)=>`<label style="display:flex;gap:10px;background:var(--bg);padding:10px;border-radius:8px;"><input type="radio" name="rm" value="${x.id}" ${i===0?'checked':''}><div><strong>${x.lider_nome||'S/L'}</strong><br>${x.nome}</div></label>`).join('');$('modal-mesclar').style.display='flex';}
-function confirmarMesclagem(){let id=Number(document.querySelector('input[name="rm"]:checked').value);let m=loteEm.find(x=>x.id===id);let rem=loteEm.filter(x=>x.id!==id).map(x=>x.id);loteEm.forEach(x=>{if(x.id===id)return;['fone','cpf','titulo','endereco','bairro','zona','secao'].forEach(c=>{if(!m[c]&&x[c])m[c]=x[c];});});pessoas=pessoas.filter(x=>!rem.includes(x.id));let idx=pessoas.findIndex(x=>x.id===id);if(idx!==-1)pessoas[idx]=m;savDados();renPess($('busca-banco').value);fecharModais();}
-
-function renPess(f=""){savDados();let l=pessoas.slice().reverse();if(f)l=l.filter(x=>x.nome.includes(f.toUpperCase())||(x.cpf&&x.cpf.includes(f)));$('total-registos').innerText=pessoas.length;let div=$('lista-pessoas');div.innerHTML='';l.forEach(p=>{let d=getDup(p),al='';if(d.length>0)al=`<div class="alerta-duplicado-box">⚠ Duplicidade<button class="btn-mesclar" onclick="abrirModalMesclar(${p.id})">Mesclar</button></div>`;div.innerHTML+=`<div class="item-card"><div style="display:flex;justify-content:space-between;"><div><strong>${p.nome}</strong><br><span class="badge">${p.lider_nome||'NENHUM'}</span></div><div><button class="action-btn" onclick="abrirEditarPessoa(${p.id})">✏️</button><button class="action-btn" onclick="excluirPessoa(${p.id})">🗑️</button></div></div><div class="item-details">📱 ${p.fone} | 💳 ${p.cpf}<br>🏠 ${p.endereco} - ${p.bairro}</div>${al}</div>`;});}
-
-function atSelLid(){let o='<option value="">Selecione...</option>'+lideres.map(l=>`<option value="${l.id}">${l.nome}</option>`).join('');['select-lider-ia-foto','select-lider-ia-texto','cad-pessoa-lider'].forEach(id=>{if($(id))$(id).innerHTML=o;});}
-function atLid(){savDados();atSelLid();let div=$('lista-lideres');div.innerHTML='';lideres.forEach(l=>{div.innerHTML+=`<div class="item-card"><div style="display:flex;justify-content:space-between;"><strong>${l.nome} - ${l.local}</strong><div><button class="action-btn" onclick="abrirEditarLider(${l.id})">✏️</button><button class="action-btn" onclick="excluirLider(${l.id})">🗑️</button></div></div><div class="item-details">${Number(l.valor).toFixed(2)} + ${Number(l.valorPessoa||50).toFixed(2)}/Pessoa <br><small>${l.obs||''}</small></div></div>`;});}
-
-$('form-lider').addEventListener('submit',e=>{e.preventDefault();lideres.push({id:Date.now(),nome:$('lider-nome').value.toUpperCase(),local:$('lider-local').value.toUpperCase(),contato:$('lider-contato').value,valor:$('lider-valor').value||0,valorPessoa:$('lider-valor-pessoa').value\vert{}\vert{}50,obs:$('lider-obs').value.toUpperCase()});atLid();e.target.reset();});
-$('form-pessoa-manual').addEventListener('submit',e=>{e.preventDefault();let lId=$('cad-pessoa-lider').value,ld=lideres.find(x=>x.id==lId);pessoas.push({id:Date.now(),lider_id:lId,lider_nome:ld?ld.nome:'',nome:$('cad-nome').value.toUpperCase(),fone:$('cad-fone').value,cpf:$('cad-cpf').value,endereco:$('cad-endereco').value.toUpperCase(),bairro:$('cad-bairro').value.toUpperCase(),titulo:$('cad-titulo').value,zona:$('cad-zona').value,secao:$('cad-secao').value});renPess();e.target.reset();switchTab('tab-banco');});
-
-function abrirEditarLider(id){let l=lideres.find(x=>x.id===id);$('edit-lider-id').value=l.id;$('edit-lider-nome').value=l.nome;$('edit-lider-local').value=l.local;$('edit-lider-contato').value=l.contato;$('edit-lider-valor').value=l.valor;$('edit-lider-valor-pessoa').value=l.valorPessoa;$('edit-lider-obs').value=l.obs\vert{}\vert{}'';$('modal-editar-lider').style.display='flex';}
-function salvarEdicaoLider(){let id=Number($('edit-lider-id').value),idx=lideres.findIndex(x=>x.id===id),n=$('edit-lider-nome').value.toUpperCase();lideres[idx].nome=n;lideres[idx].local=$('edit-lider-local').value.toUpperCase();lideres[idx].contato=$('edit-lider-contato').value;lideres[idx].valor=$('edit-lider-valor').value;lideres[idx].valorPessoa=$('edit-lider-valor-pessoa').value;lideres[idx].obs=$('edit-lider-obs').value.toUpperCase();pessoas.forEach(p=>{if(p.lider_id==id)p.lider_nome=n;});atLid();renPess();fecharModais();}
-function excluirLider(id){if(confirm('Excluir?')){lideres=lideres.filter(x=>x.id!==id);pessoas.forEach(p=>{if(p.lider_id==id){p.lider_id=null;p.lider_nome="SEM RESPONSÁVEL";}});atLid();renPess();}}
-
-function abrirEditarPessoa(id){let p=pessoas.find(x=>x.id===id);let sel=$('edit-pessoa-lider');sel.innerHTML='<option value="">Sem Responsável</option>'+lideres.map(l=>`<option value="${l.id}" ${p.lider_id==l.id?'selected':''}>${l.nome}</option>`).join('');['id','nome','fone','cpf','endereco','bairro','titulo','zona','secao'].forEach(c=>{let f=$(`edit-pessoa-${c}`);if(f)f.value=p[c]||'';});$('modal-editar-pessoa').style.display='flex';}
-function salvarEdicaoPessoa(){let id=Number($('edit-pessoa-id').value),idx=pessoas.findIndex(x=>x.id===id),lId=$('edit-pessoa-lider').value,ld=lideres.find(x=>x.id==lId);pessoas[idx].lider_id=lId;pessoas[idx].lider_nome=ld?ld.nome:"SEM RESPONSÁVEL";['nome','fone','cpf','endereco','bairro','titulo','zona','secao'].forEach(c=>{let f=$(`edit-pessoa-${c}`);if(f)pessoas[idx][c]=f.value.toUpperCase();});renPess($('busca-banco').value);fecharModais();}
-function excluirPessoa(id){if(confirm('Apagar?')){pessoas=pessoas.filter(x=>x.id!==id);renPess($('busca-banco').value);}}
-
-$('input-api-key').value=localStorage.getItem('gemini_api_key')\vert{}\vert{}'';$('input-groq-key').value=localStorage.getItem('groq_api_key')||'';
-function salvarApiKeys(){localStorage.setItem('gemini_api_key',$('input-api-key').value.replace(/[\s\r\n]+/g,''));localStorage.setItem('groq_api_key',$('input-groq-key').value.replace(/[\s\r\n]+/g,''));alert('Chaves Guardadas!');}
-
-function cImg(f,ms=800){return new Promise(rs=>{let rd=new FileReader();rd.onload=e=>{let ig=new Image();ig.onload=()=>{let w=ig.width,h=ig.height;if(w>h){if(w>ms){h*=ms/w;w=ms;}}else{if(h>ms){w*=ms/h;h=ms;}}let cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(ig,0,0,w,h);rs(cv.toDataURL('image/jpeg',0.6));};ig.src=e.target.result;};rd.readAsDataURL(f);});}
-
-async function processarImagemHibrida(){
-  let mtr = $('select-ia-motor').value;
-  let key = mtr === 'groq' ? localStorage.getItem('groq_api_key') : localStorage.getItem('gemini_api_key');
-  if(!key) return alert("Chave API não encontrada para o motor selecionado. Guarde nas Configurações.");
-  let ld = $('select-lider-ia-foto').value; if(!ld) return alert('Selecione líder.');
-  let f = $('input-foto-ficha').files[0]; if(!f) return alert('Falta foto.');
+  window.onerror = function(m, u, l) { alert("ERRO DE CÓDIGO:\n" + m + "\nLinha: " + l); };
   
-  let btn = $('btn-processar-foto'); btn.innerText = "⏳ A processar..."; btn.disabled = true;
-  try{
-    let b64 = (await cImg(f)).split(',')[1];
-    let p = "Extrair p/ JSON array de 1 objeto com chaves minúsculas: nome,fone,cpf,endereco,bairro,titulo,zona,secao. Devolva apenas o array JSON válido sem markdown.";
-    let txt = "";
-    
-    if(mtr === 'groq') {
-       let r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-         method: 'POST', headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
-         body: JSON.stringify({
-           model: 'llama-3.2-11b-vision-preview',
-           messages: [{ role: 'user', content: [ {type: 'text', text: p}, {type: 'image_url', image_url: {url: 'data:image/jpeg;base64,' + b64}} ] }]
-         })
-       });
-       let d = await r.json();
-       if(!r.ok) throw new Error(d.error?d.error.message:"Erro Groq");
-       txt = d.choices[0].message.content;
+  const VERSAO_ATUAL = "3.7.0";
+  const headerVersion = document.getElementById('header-version');
+  if (headerVersion) headerVersion.innerText = "v" + VERSAO_ATUAL;
+  const footerVersion = document.getElementById('footer-v-num');
+  if (footerVersion) footerVersion.innerText = VERSAO_ATUAL;
+
+  const SENHA_ACESSO = "wini";
+  let anoAtual = localStorage.getItem('anoAtual') || '2026';
+  let anosDisp = JSON.parse(localStorage.getItem('anosDisponiveis') || '["2026"]');
+  let lideres = [], pessoas = [], loteEmConferencia = [], liderAtivo = null, indiceAtual = 0, grupoConflitoAtual = [];
+
+  function checkAuth() {
+    let ls = document.getElementById('login-screen'), ac = document.getElementById('app-content');
+    if(!ls || !ac) return;
+    if(sessionStorage.getItem('auth_fichas') === '1') { ls.style.display='none'; ac.style.display='block'; }
+    else { ls.style.display='flex'; ac.style.display='none'; }
+  }
+  
+  function fazerLogin() {
+    let inp = document.getElementById('input-senha-login');
+    if(inp && inp.value.trim().toLowerCase() === SENHA_ACESSO) {
+      sessionStorage.setItem('auth_fichas', '1');
+      document.getElementById('login-erro').style.display='none'; inp.value=''; checkAuth();
     } else {
-       let mds = ['gemini-1.5-flash-latest','gemini-1.5-flash'], suc=false, err="";
-       for(let m of mds){
-         try{
-           let r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:p},{inline_data:{mime_type:'image/jpeg',data:b64}}]}]})});
-           let d=await r.json(); if(r.ok&&!d.error){suc=true;txt=d.candidates[0].content.parts[0].text;break;}else{err=d.error?d.error.message:"Erro "+r.status;}
-         }catch(e){err=e.message;}
-       }
-       if(!suc) throw new Error("A sua chave Gemini bloqueou a imagem. Erro: "+err);
+      document.getElementById('login-erro').style.display='block';
+    }
+  }
+  
+  function sairSistema() { sessionStorage.removeItem('auth_fichas'); checkAuth(); if(document.getElementById('drawer-menu').classList.contains('open')) toggleDrawer(); }
+  document.getElementById('input-senha-login').addEventListener('keypress', function(e){ if(e.key === 'Enter') fazerLogin(); });
+  checkAuth();
+
+  function abrirChangelog() {
+    document.getElementById('changelog-content').innerHTML = '<div class="changelog-item"><div class="cl-versao">v3.7.0 <span class="cl-data">Atual</span></div><div class="cl-desc">Sistema Híbrido de IA (Llama 3 Vision via Groq + Google Gemini) para evitar bloqueios de chave. Formatação compacta e blindada contra falhas de cópia.</div></div>';
+    document.getElementById('modal-changelog').style.display = 'flex';
+  }
+
+  if(localStorage.getItem('bd_lideres') && !localStorage.getItem('bd_lideres_2026')) {
+    localStorage.setItem('bd_lideres_2026', localStorage.getItem('bd_lideres'));
+    localStorage.setItem('bd_pessoas_2026', localStorage.getItem('bd_pessoas'));
+  }
+  
+  function carregarDadosAno() {
+    lideres = JSON.parse(localStorage.getItem('bd_lideres_' + anoAtual) || '[]');
+    pessoas = JSON.parse(localStorage.getItem('bd_pessoas_' + anoAtual) || '[]');
+    document.getElementById('header-ano-text').innerText = anoAtual;
+    if(document.getElementById('span-ano-lista-lideres')) document.getElementById('span-ano-lista-lideres').innerText = anoAtual;
+    document.getElementById('select-ano').innerHTML = anosDisp.map(a => '<option value="' + a + '" ' + (a === anoAtual ? 'selected' : '') + '>' + a + '</option>').join('');
+  }
+  
+  function salvarDadosAno() {
+    localStorage.setItem('bd_lideres_' + anoAtual, JSON.stringify(lideres));
+    localStorage.setItem('bd_pessoas_' + anoAtual, JSON.stringify(pessoas));
+  }
+  
+  function mudarAno(novo) {
+    if(!anosDisp.includes(novo)) return;
+    anoAtual = novo; localStorage.setItem('anoAtual', novo);
+    carregarDadosAno(); atualizarLideres(); renderizarPessoas();
+    if(document.getElementById('tab-graficos').classList.contains('active')) iniciarDashboard();
+  }
+  
+  document.getElementById('select-ano').addEventListener('change', function(e) { mudarAno(e.target.value); });
+  
+  function abrirModalNovoAno() { document.getElementById('input-novo-ano-modal').value=''; document.getElementById('modal-novo-ano').style.display='flex'; }
+  function confirmarNovoAno() {
+    let n = document.getElementById('input-novo-ano-modal').value.trim();
+    if(!n || anosDisp.includes(n)) return alert("Ano inválido ou existente.");
+    let op = document.querySelector('input[name="opcao_migracao"]:checked').value;
+    let nl = [], np = [];
+    if(op === 'lideres') { nl = lideres.map(l => ({...l, valor: 0})); }
+    else if(op === 'tudo') { nl = lideres.map(l => ({...l})); np = pessoas.map(p => ({...p})); }
+    anosDisp.push(n); anosDisp.sort((a,b) => b - a);
+    localStorage.setItem('anosDisponiveis', JSON.stringify(anosDisp));
+    localStorage.setItem('bd_lideres_' + n, JSON.stringify(nl));
+    localStorage.setItem('bd_pessoas_' + n, JSON.stringify(np));
+    fecharModais(); mudarAno(n); alert('Ano ' + n + ' ativado com sucesso!');
+  }
+
+  function toggleDrawer() {
+    let m = document.getElementById('drawer-menu'), o = document.getElementById('drawer-overlay');
+    if(m.classList.contains('open')) { m.classList.remove('open'); o.style.display='none'; }
+    else { m.classList.add('open'); o.style.display='block'; }
+  }
+  
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.drawer-item').forEach(b => b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    if(document.getElementById('drawer-menu').classList.contains('open')) toggleDrawer();
+    if(id === 'tab-relatorios') atualizarTelaRelatorios();
+    if(id === 'tab-cadastrar' || id === 'tab-importar') atualizarSelectsLideres();
+    if(id === 'tab-graficos') iniciarDashboard();
+    if(id === 'tab-banco') renderizarPessoas();
+  }
+  
+  function fecharModais() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display='none'); }
+  function ciclarTema() {
+    let ts = ['azul', 'verde', 'roxo', 'dark'], idx = ts.indexOf(localStorage.getItem('temaPref') || 'azul');
+    idx = (idx + 1) % ts.length; let nt = ts[idx];
+    if(nt === 'azul') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', nt);
+    localStorage.setItem('temaPref', nt);
+  }
+  if((localStorage.getItem('temaPref')||'azul') !== 'azul') document.documentElement.setAttribute('data-theme', localStorage.getItem('temaPref'));
+
+  function mF(v) { let n = v.replace(/\D/g,''); if(n.length>0 && n.length<=9 && !n.startsWith('81')) n='81'+n; return n.replace(/^(\d{2})(\d)/g,'($1) $2').replace(/(\d{4,5})(\d{4})$/,'$1-$2'); }
+  function mC(v) { return v.replace(/\D/g,'').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'); }
+  ['lider-contato','edit-lider-contato','conf-fone','cad-fone','edit-pessoa-fone'].forEach(i=>{ let e = document.getElementById(i); if(e) e.addEventListener('input', ev=> ev.target.value = mF(ev.target.value)); });
+  ['cad-cpf','conf-cpf','edit-pessoa-cpf'].forEach(i=>{ let e = document.getElementById(i); if(e) e.addEventListener('input', ev=> ev.target.value = mC(ev.target.value)); });
+
+  if(document.getElementById('input-api-key')) document.getElementById('input-api-key').value = localStorage.getItem('gemini_api_key') || '';
+  if(document.getElementById('input-groq-key')) document.getElementById('input-groq-key').value = localStorage.getItem('groq_api_key') || '';
+  
+  function salvarApiKeys() {
+    let gk = document.getElementById('input-api-key').value.replace(/[\s\r\n]+/g, '');
+    let grk = document.getElementById('input-groq-key').value.replace(/[\s\r\n]+/g, '');
+    localStorage.setItem('gemini_api_key', gk);
+    localStorage.setItem('groq_api_key', grk);
+    alert('Chaves Guardadas com Sucesso!');
+  }
+
+  async function testarConexao() {
+    let gKey = localStorage.getItem('gemini_api_key');
+    let qKey = localStorage.getItem('groq_api_key');
+    if(!gKey && !qKey) return alert("Guarde pelo menos uma chave primeiro.");
+    let logs = "--- RESULTADOS ---\n";
+    
+    if(qKey) {
+        try {
+            let res = await fetch("https://api.groq.com/openai/v1/models", { headers: {"Authorization": "Bearer " + qKey} });
+            if(res.ok) logs += "✅ Groq: Conectado com Sucesso!\n"; else logs += "❌ Groq: Chave inválida.\n";
+        } catch(e) { logs += "❌ Groq: Falha de Rede.\n"; }
     }
     
-    loteEm = JSON.parse(txt.replace(/```json/g,'').replace(/```/g,'').trim());
-    if(!Array.isArray(loteEm)) loteEm=[loteEm];
-    lIdAtv=lideres.find(x=>x.id==ld); iAtv=0; abrirFichaModal(0);
-  } catch(e) { alert("Erro IA:\n"+e.message); } finally { btn.innerText="📷 Processar Ficha"; btn.disabled=false; $('input-foto-ficha').value=''; }
-}
+    if(gKey) {
+        try {
+            let res = await fetch("https://generativelanguage.googleapis.com/v1beta/models?key=" + gKey);
+            let d = await res.json();
+            if(res.ok && d.models) {
+                let txt = d.models.map(x => x.name).join('');
+                if(txt.includes('flash')) logs += "✅ Gemini: Acesso total a fotos liberado!\n";
+                else logs += "⚠️ Gemini: Conta Restrita. Só lê texto.\n";
+            } else { logs += "❌ Gemini: Chave inválida.\n"; }
+        } catch(e) { logs += "❌ Gemini: Falha de Rede.\n"; }
+    }
+    alert(logs);
+  }
 
-$('btn-iniciar-conferencia').addEventListener('click',()=>{let ld=$('select-lider-ia-texto').value,j=$('json-input').value;if(!ld||!j)return;try{loteEm=JSON.parse(j);if(!Array.isArray(loteEm))throw 1;lIdAtv=lideres.find(x=>x.id==ld);iAtv=0;abrirFichaModal(0);}catch(e){alert('JSON inválido');}});
-function abrirFichaModal(i){if(i>=loteEm.length){fecharModais();switchTab('tab-banco');return;}$('modal-contador').innerText=`${i+1}/${loteEm.length}`;['nome','fone','cpf','endereco','bairro','titulo','zona','secao'].forEach(c=>{$(`conf-${c}`).value=loteEm[i][c]||'';});$('conf-fone').value=maskF($('conf-fone').value);$('conf-cpf').value=maskC($('conf-cpf').value);$('modal-conferencia').style.display='flex';}
-$('btn-aprovar-ficha').addEventListener('click',()=>{pessoas.push({id:Date.now(),lider_id:lIdAtv.id,lider_nome:lIdAtv.nome,nome:$('conf-nome').value.toUpperCase(),fone:$('conf-fone').value,cpf:$('conf-cpf').value,endereco:$('conf-endereco').value.toUpperCase(),bairro:$('conf-bairro').value.toUpperCase(),titulo:$('conf-titulo').value,zona:$('conf-zona').value,secao:$('conf-secao').value});renPess();iAtv++;abrirFichaModal(iAtv);});$('btn-pular-ficha').addEventListener('click',()=>{iAtv++;abrirFichaModal(iAtv);});
+  function cImg(file, mSize = 800) {
+    return new Promise(res => {
+      let rd = new FileReader();
+      rd.onload = e => {
+        let ig = new Image();
+        ig.onload = () => {
+          let w = ig.width, h = ig.height;
+          if(w > h) { if(w > mSize) { h *= mSize/w; w = mSize; } } else { if(h > mSize) { w *= mSize/h; h = mSize; } }
+          let cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+          cv.getContext('2d').drawImage(ig, 0, 0, w, h);
+          res(cv.toDataURL('image/jpeg', 0.5));
+        }; ig.src = e.target.result;
+      }; rd.readAsDataURL(file);
+    });
+  }
 
-let fAtv=new Set(); function iniDash(){fAtv.clear();lideres.forEach(l=>fAtv.add(String(l.id)));fAtv.add('sl');upDash();}
-function upDash(){let c=$('chips-filtros');c.innerHTML='';lideres.forEach(l=>c.innerHTML+=`<button class="chip ${fAtv.has(String(l.id))?'active':''}" onclick="tgF('${l.id}')">${l.nome}</button>`);c.innerHTML+=`<button class="chip ${fAtv.has('sl')?'active':''}" onclick="tgF('sl')">S/ LÍDER</button>`;let pF=pessoas.filter(p=>p.lider_id?fAtv.has(String(p.lider_id)):fAtv.has('sl'));$('stat-total-pessoas').innerText=pF.length;let tt=0;lideres.forEach(l=>{if(fAtv.has(String(l.id))){let q=pessoas.filter(p=>p.lider_id==l.id).length;tt+=(q*(Number(l.valorPessoa)||50))+(Number(l.valor)||0);}});if(fAtv.has('sl')){let q=pessoas.filter(p=>!p.lider_id).length;tt+=q*50;}$('stat-total-orcamento').innerText=tt.toLocaleString('pt-BR',{minimumFractionDigits:2});let wr=$('grafico-2-container');wr.innerHTML='';lideres.forEach((l,i)=>{if(fAtv.has(String(l.id))){let q=pessoas.filter(p=>p.lider_id==l.id).length;wr.innerHTML+=`<div class="premium-bar-wrap"><strong>${l.nome} - ${q} Fichas</strong><div class="premium-bar-bg"><div class="premium-bar-fill" style="width:${q>0?Math.min(q*5,100):0}%; background:#10b981;"></div></div></div>`;}});} function tgF(id){if(fAtv.has(id))fAtv.delete(id);else fAtv.add(id);upDash();}
+  async function processarImagemIA() {
+    let mtr = document.getElementById('select-ia-motor').value;
+    let key = mtr === 'groq' ? localStorage.getItem('groq_api_key') : localStorage.getItem('gemini_api_key');
+    if(!key) return alert("Chave API não encontrada para o motor: " + mtr.toUpperCase());
+    
+    let lid = document.getElementById('select-lider-ia-foto').value;
+    if(!lid) return alert("Selecione o Líder.");
+    let fpt = document.getElementById('input-foto-ficha');
+    if(!fpt.files[0]) return alert("Anexe a foto da ficha.");
+    
+    let btn = document.getElementById('btn-processar-foto');
+    btn.innerText = "⏳ A processar (" + mtr + ")..."; btn.disabled = true;
 
-function atRel(){let d=$('lista-lideres-imprimir');d.innerHTML=`<label><input type="checkbox" onchange="document.querySelectorAll('.cl').forEach(c=>c.checked=this.checked)" checked> TODOS</label><br>`;lideres.forEach(l=>d.innerHTML+=`<label><input type="checkbox" class="cl" value="${l.id}" checked> ${l.nome}</label><br>`);}
-function imprimirRelatorio(){let sl=Array.from(document.querySelectorAll('.cl:checked')).map(c=>Number(c.value));if(!sl.length)return;let lf=lideres.filter(l=>sl.includes(l.id)),tp=$('tipo-relatorio').value,h=`<!DOCTYPE html><html><head><style>body{font-family:sans-serif;font-size:12px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;}th{background:#eee;}</style></head><body><h2>Relatório ${anoAtual}</h2>`;if(tp==='valores'){h+=`<table><tr><th>Líder</th><th>Cálculo</th><th>Total</th></tr>`;let tG=0;lf.forEach(l=>{let q=pessoas.filter(p=>p.lider_id==l.id).length,v=(Number(l.valor)||0)+(q*Number(l.valorPessoa||50));tG+=v;h+=`<tr><td>${l.nome}</td><td>${l.valor||0} + ${q}x${l.valorPessoa||50}</td><td>${v.toFixed(2)}</td></tr>`;});h+=`<tr><th colspan="2">TOTAL</th><th>${tG.toFixed(2)}</th></tr></table>`;}else if(tp==='resumo'){h+=`<table><tr><th>Líder</th><th>Qtd</th></tr>`;let tQ=0;lf.forEach(l=>{let q=pessoas.filter(p=>p.lider_id==l.id).length;tQ+=q;h+=`<tr><td>${l.nome}</td><td>${q}</td></tr>`;});h+=`<tr><th>TOTAL</th><th>${tQ}</th></tr></table>`;}else{lf.forEach(l=>{let ps=pessoas.filter(p=>p.lider_id==l.id);h+=`<h3>Líder: ${l.nome} (${ps.length})</h3><ul>`;ps.forEach(p=>h+=`<li>${p.nome} - Fone:${p.fone} - CPF:${p.cpf} - Tít:${p.titulo} - Z:${p.zona} S:${p.secao}</li>`);h+=`</ul>`;});}h+=`</body></html>`;let w=window.open('','_blank');w.document.write(h);w.document.close();setTimeout(()=>w.print(),500);}
+    try {
+      let b64Url = await cImg(fpt.files[0]);
+      let b64 = b64Url.split(',')[1];
+      let pText = "Extraia dados da imagem para um array JSON contendo um único objeto com as chaves (tudo minúsculo): 'nome','fone','cpf','endereco','bairro','titulo','zona','secao'. Deixe o valor vazio ('') se não encontrar o dado. Não use markdown (```json), devolva apenas o JSON array válido.";
+      let outText = "";
 
-$('btn-exportar-csv').addEventListener('click',()=>{let c='\uFEFFLíder;Nome;Fone;Endereço;Bairro;CPF;Título;Zona;Seção\n';pessoas.forEach(p=>c+=`"${p.lider_nome}";"${p.nome}";"${p.fone}";"${p.endereco}";"${p.bairro}";"${p.cpf}";"${p.titulo}";"${p.zona}";"${p.secao}"\n`);let l=document.createElement('a');l.href=URL.createObjectURL(new Blob([c],{type:'text/csv'}));l.download=`fichas_${anoAtual}.csv`;l.click();});
-function exportarBackupJSON(){let b={v:VERSAO_ATUAL,anos:anosDisp,d:{}};anosDisp.forEach(a=>{b.d[a]={l:JSON.parse(localStorage.getItem('bd_lideres_'+a)||'[]'),p:JSON.parse(localStorage.getItem('bd_pessoas_'+a)||'[]')};});let l=document.createElement('a');l.href=URL.createObjectURL(new Blob([JSON.stringify(b)],{type:'application/json'}));l.download=`backup_${anoAtual}.json`;l.click();}
-function importarBackupJSON(e){let r=new FileReader();r.onload=(ev)=>{try{let d=JSON.parse(ev.target.result);if(d.anos&&d.d){anosDisp=d.anos;localStorage.setItem('anosDisponiveis',JSON.stringify(anosDisp));anosDisp.forEach(a=>{localStorage.setItem('bd_lideres_'+a,JSON.stringify(d.d[a].l));localStorage.setItem('bd_pessoas_'+a,JSON.stringify(d.d[a].p));});mudarAno(anosDisp[0]);alert('Restaurado!');}}catch(err){alert('Erro JSON');}};r.readAsText(e.target.files[0]);}
-function apagarAnoAtual(){if($('senha-apagar').value==='wini'&&confirm('Apagar TUDO deste ano?')){lideres=[];pessoas=[];savDados();carDados();atLid();renPess();$('senha-apagar').value='';alert('Apagado');}}
+      if(mtr === 'groq') {
+          let req = await fetch('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
+              method: 'POST', headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  model: 'llama-3.2-11b-vision-preview',
+                  messages: [{ role: 'user', content: [{type: 'text', text: pText}, {type: 'image_url', image_url: {url: b64Url}}] }],
+                  temperature: 0.2
+              })
+          });
+          let dt = await req.json();
+          if(!req.ok) throw new Error(dt.error ? dt.error.message : "Erro na Groq");
+          outText = dt.choices[0].message.content;
+      } else {
+          let suc = false, err = "";
+          let mods = ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-1.5-pro-latest'];
+          for(let m of mods) {
+              try {
+                  let ctl = new AbortController(); let tOut = setTimeout(() => ctl.abort(), 20000);
+                  let rr = await fetch("[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/)" + m + ":generateContent?key=" + key, {
+                      method: 'POST', headers: {'Content-Type': 'application/json'}, signal: ctl.signal,
+                      body: JSON.stringify({ contents: [{ parts: [{ text: pText }, { inline_data: { mime_type: 'image/jpeg', data: b64 } }] }] })
+                  });
+                  clearTimeout(tOut);
+                  let tx = await rr.text(); let dt = {}; try { dt = JSON.parse(tx); } catch(ex){}
+                  if(rr.ok && !dt.error) { suc = true; outText = dt.candidates[0].content.parts[0].text; break; }
+                  else { err = dt.error ? dt.error.message : "Status " + rr.status; }
+              } catch(er) { err = er.message; }
+          }
+          if(!suc) throw new Error("A sua chave Gemini bloqueou a imagem. Detalhe: " + err);
+      }
+      
+      let clean = outText.replace(/```json/g, '').replace(/```/g, '').trim();
+      loteEmConferencia = JSON.parse(clean);
+      if(!Array.isArray(loteEmConferencia)) loteEmConferencia = [loteEmConferencia];
+      liderAtivo = lideres.find(x => x.id == lid); indiceAtual = 0; abrirFichaModal(0);
+      
+    } catch(err) {
+      alert("ERRO IA:\n" + err.message);
+    } finally {
+      btn.innerText = "📷 Processar Ficha"; btn.disabled = false; fpt.value = '';
+    }
+  }
 
-try{carDados();atLid();renPess();}catch(e){console.error(e);}
-</script></body></html>
+  function getDup(p1) {
+    let d = [], n1 = (p1.nome||'').trim().toUpperCase(), c1 = (p1.cpf||'').replace(/\D/g,'');
+    pessoas.forEach(p2 => { if(p1.id === p2.id) return; let n2 = (p2.nome||'').trim().toUpperCase(), c2 = (p2.cpf||'').replace(/\D/g,''); if((n1 && n1.length>3 && n1===n2) || (c1 && c1.length===11 && c1===c2)) d.push(p2); }); return d;
+  }
+  function abrirModalMesclar(id) {
+    let p = pessoas.find(x => x.id === id); if(!p) return; grupoConflitoAtual = [p, ...getDup(p)];
+    document.getElementById('mesclar-opcoes').innerHTML = grupoConflitoAtual.map((x,i) => '<label style="display:flex; gap:10px; background:var(--bg); padding:10px; border-radius:8px; cursor:pointer;"><input type="radio" name="rdm" value="' + x.id + '" ' + (i===0?'checked':'') + '><div style="text-align:left;"><strong>Manter: ' + (x.lider_nome||'S/L') + '</strong><br>' + x.nome + '<br><small>CPF: ' + (x.cpf||'') + ' | Fone: ' + (x.fone||'') + '</small></div></label>').join('');
+    document.getElementById('modal-mesclar').style.display = 'flex';
+  }
+  function confirmarMesclagem() {
+    let rd = document.querySelector('input[name="rdm"]:checked'); if(!rd) return; let idM = Number(rd.value);
+    let ms = grupoConflitoAtual.find(x => x.id === idM); let rm = grupoConflitoAtual.filter(x => x.id !== idM).map(x => x.id);
+    grupoConflitoAtual.forEach(x => { if(x.id === idM) return; ['fone','cpf','titulo','endereco','bairro','zona','secao'].forEach(c => { if(!ms[c] && x[c]) ms[c] = x[c]; }); });
+    pessoas = pessoas.filter(x => !rm.includes(x.id)); let idx = pessoas.findIndex(x => x.id === idM); if(idx !== -1) pessoas[idx] = ms;
+    salvarDadosAno(); renderizarPessoas(document.getElementById('busca-banco').value); fecharModais(); alert('Mesclado com sucesso!');
+  }
+
+  function renderizarPessoas(f="") {
+    salvarDadosAno(); let l = pessoas.slice().reverse(); if(f) l = l.filter(x => (x.nome||'').includes(f.toUpperCase()) || (x.cpf||'').includes(f));
+    let tReg = document.getElementById('total-registos'); if(tReg) tReg.innerText = pessoas.length;
+    let div = document.getElementById('lista-pessoas'); if(!div) return; div.innerHTML = l.length ? '' : '<p style="color:var(--text-muted);font-size:0.9rem;">Nenhuma ficha encontrada.</p>';
+    l.forEach(p => {
+      let av = '', dp = getDup(p); if(dp.length > 0) av = '<div class="alerta-duplicado-box"><span class="alerta-duplicado-text">⚠ Duplicidade</span><button class="btn-mesclar" onclick="abrirModalMesclar(' + p.id + ')">Mesclar</button></div>';
+      div.innerHTML += '<div class="item-card"><div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><strong>' + p.nome + '</strong><br><span class="badge" style="margin-top:4px;">Líder: ' + (p.lider_nome||'NENHUM') + '</span></div><div class="actions-container"><button class="action-btn" onclick="abrirEditarPessoa(' + p.id + ')">✏️</button><button class="action-btn" onclick="excluirPessoa(' + p.id + ')">🗑️</button></div></div><div class="item-details">📱 ' + (p.fone||'') + ' | 💳 ' + (p.cpf||'') + '<br>🏠 ' + (p.endereco||'') + ' - ' + (p.bairro||'') + '<br>🗳️ Tít: ' + (p.titulo||'') + ' | Z: ' + (p.zona||'') + ' | S: ' + (p.secao||'') + '</div>' + av + '</div>';
+    });
+  }
+  document.getElementById('busca-banco').addEventListener('input', e => renderizarPessoas(e.target.value));
+
+  function atualizarSelectsLideres() {
+    let html = '<option value="">Selecione...</option>' + lideres.map(l => '<option value="' + l.id + '">' + l.nome + ' (' + l.local + ')</option>').join('');
+    ['select-lider-ia-foto', 'select-lider-ia-texto', 'cad-pessoa-lider', 'edit-pessoa-lider'].forEach(id => { let e = document.getElementById(id); if(e) e.innerHTML = html; });
+  }
+  function atualizarLideres() {
+    salvarDadosAno(); atualizarSelectsLideres();
+    let d = document.getElementById('lista-lideres'); if(!d) return;
+    d.innerHTML = lideres.length ? '' : '<p style="color:var(--text-muted);font-size:0.9rem;">Nenhum registo.</p>';
+    lideres.forEach(l => {
+      d.innerHTML += '<div class="item-card"><div style="display:flex;justify-content:space-between;align-items:center;"><strong style="color:var(--primary);">' + l.nome + ' - ' + l.local + '</strong><div class="actions-container"><button class="action-btn" onclick="abrirEditarLider(' + l.id + ')">✏️</button><button class="action-btn" onclick="excluirLider(' + l.id + ')">🗑️</button></div></div><div class="item-details">Contato: ' + l.contato + ' | Fixo: ' + (l.valor||0) + ' | Pág: ' + (l.valorPessoa||50) + '<br><small style="color:var(--warning);">' + (l.obs||'') + '</small></div></div>';
+    });
+  }
+  
+  document.getElementById('form-lider').addEventListener('submit', e => {
+    e.preventDefault();
+    lideres.push({ id: Date.now(), nome: document.getElementById('lider-nome').value.trim().toUpperCase(), local: document.getElementById('lider-local').value.trim().toUpperCase(), contato: document.getElementById('lider-contato').value, valor: document.getElementById('lider-valor').value || 0, valorPessoa: document.getElementById('lider-valor-pessoa').value || 50, obs: document.getElementById('lider-obs').value.trim().toUpperCase() });
+    atualizarLideres(); e.target.reset(); alert('Salvo!');
+  });
+  
+  function abrirEditarLider(id) {
+    let l = lideres.find(x => x.id === id); if(!l) return;
+    document.getElementById('edit-lider-id').value = l.id; document.getElementById('edit-lider-nome').value = l.nome; document.getElementById('edit-lider-local').value = l.local; document.getElementById('edit-lider-contato').value = l.contato; document.getElementById('edit-lider-valor').value = l.valor; document.getElementById('edit-lider-valor-pessoa').value = l.valorPessoa; document.getElementById('edit-lider-obs').value = l.obs || ''; document.getElementById('modal-editar-lider').style.display='flex';
+  }
+  function salvarEdicaoLider() {
+    let id = Number(document.getElementById('edit-lider-id').value), idx = lideres.findIndex(x => x.id === id); if(idx === -1) return;
+    let novoN = document.getElementById('edit-lider-nome').value.trim().toUpperCase();
+    lideres[idx].nome = novoN; lideres[idx].local = document.getElementById('edit-lider-local').value.trim().toUpperCase(); lideres[idx].contato = document.getElementById('edit-lider-contato').value; lideres[idx].valor = document.getElementById('edit-lider-valor').value || 0; lideres[idx].valorPessoa = document.getElementById('edit-lider-valor-pessoa').value || 50; lideres[idx].obs = document.getElementById('edit-lider-obs').value.trim().toUpperCase();
+    pessoas.forEach(p => { if(p.lider_id == id) p.lider_nome = novoN; }); atualizarLideres(); renderizarPessoas(); fecharModais();
+  }
+  function excluirLider(id) { if(confirm('Apagar Responsável?')) { lideres = lideres.filter(x => x.id !== id); pessoas.forEach(p => { if(p.lider_id == id) { p.lider_id = null; p.lider_nome = "SEM RESPONSÁVEL"; } }); atualizarLideres(); renderizarPessoas(); } }
+
+  document.getElementById('form-pessoa-manual').addEventListener('submit', e => {
+    e.preventDefault(); let lId = document.getElementById('cad-pessoa-lider').value; if(!lId) return alert('Selecione líder.'); let ld = lideres.find(x => x.id == lId);
+    pessoas.push({ id: Date.now(), lider_id: Number(lId), lider_nome: ld?ld.nome:'', nome: document.getElementById('cad-nome').value.trim().toUpperCase(), fone: document.getElementById('cad-fone').value, cpf: document.getElementById('cad-cpf').value, endereco: document.getElementById('cad-endereco').value.trim().toUpperCase(), bairro: document.getElementById('cad-bairro').value.trim().toUpperCase(), titulo: document.getElementById('cad-titulo').value, zona: document.getElementById('cad-zona').value.toUpperCase(), secao: document.getElementById('cad-secao').value.toUpperCase(), data_cadastro: new Date().toLocaleDateString('pt-BR') });
+    renderizarPessoas(); e.target.reset(); switchTab('tab-banco'); alert('Salvo!');
+  });
+  
+  function abrirEditarPessoa(id) {
+    let p = pessoas.find(x => x.id === id); if(!p) return;
+    document.getElementById('edit-pessoa-lider').value = p.lider_id || '';
+    ['id','nome','fone','cpf','endereco','bairro','titulo','zona','secao'].forEach(c => { let e = document.getElementById('edit-pessoa-' + c); if(e) e.value = p[c] || ''; });
+    document.getElementById('modal-editar-pessoa').style.display='flex';
+  }
+  function salvarEdicaoPessoa() {
+    let id = Number(document.getElementById('edit-pessoa-id').value), idx = pessoas.findIndex(x => x.id === id); if(idx === -1) return;
+    let lid = document.getElementById('edit-pessoa-lider').value, lObj = lideres.find(x => x.id == lid);
+    pessoas[idx].lider_id = lid ? Number(lid) : null; pessoas[idx].lider_nome = lObj ? lObj.nome : "SEM RESPONSÁVEL";
+    ['nome','fone','cpf','endereco','bairro','titulo','zona','secao'].forEach(c => { let e = document.getElementById('edit-pessoa-' + c); if(e) pessoas[idx][c] = e.value.trim().toUpperCase(); });
+    renderizarPessoas(document.getElementById('busca-banco').value); fecharModais();
+  }
+  function excluirPessoa(id) { if(confirm('Apagar ficha?')) { pessoas = pessoas.filter(x => x.id !== id); renderizarPessoas(document.getElementById('busca-banco').value); } }
+
+  function iniciarImportacaoJSON() {
+    let lid = document.getElementById('select-lider-ia-texto').value, js = document.getElementById('json-input').value.trim();
+    if(!lid || !js) return alert('Selecione líder e cole o código.');
+    try { loteEmConferencia = JSON.parse(js); if(!Array.isArray(loteEmConferencia)) throw new Error(); liderAtivo = lideres.find(x => x.id == lid); indiceAtual = 0; abrirFichaModal(0); } catch(e) { alert('Erro: Código JSON inválido.'); }
+  }
+  function abrirFichaModal(i) {
+    if(i >= loteEmConferencia.length) { fecharModais(); switchTab('tab-banco'); alert('Fichas Importadas!'); return; }
+    document.getElementById('modal-contador').innerText = (i+1) + " / " + loteEmConferencia.length;
+    let it = loteEmConferencia[i];
+    ['nome','fone','cpf','endereco','bairro','titulo','zona','secao'].forEach(c => { let e = document.getElementById('conf-' + c); if(e) e.value = it[c] || ''; });
+    document.getElementById('conf-fone').value = mF(document.getElementById('conf-fone').value);
+    document.getElementById('conf-cpf').value = mC(document.getElementById('conf-cpf').value);
+    document.getElementById('modal-conferencia').style.display='flex';
+  }
+  function aprovarFichaIa() {
+    pessoas.push({ id: Date.now(), lider_id: liderAtivo.id, lider_nome: liderAtivo.nome, nome: document.getElementById('conf-nome').value.toUpperCase(), fone: document.getElementById('conf-fone').value, cpf: document.getElementById('conf-cpf').value, endereco: document.getElementById('conf-endereco').value.toUpperCase(), bairro: document.getElementById('conf-bairro').value.toUpperCase(), titulo: document.getElementById('conf-titulo').value, zona: document.getElementById('conf-zona').value.toUpperCase(), secao: document.getElementById('conf-secao').value.toUpperCase(), data_cadastro: new Date().toLocaleDateString('pt-BR') });
+    renderizarPessoas(); indiceAtual++; abrirFichaModal(indiceAtual);
+  }
+  function pularFichaIa() { indiceAtual++; abrirFichaModal(indiceAtual); }
+
+  function iniciarDashboard() { filtrosAtivos.clear(); lideres.forEach(l => filtrosAtivos.add(String(l.id))); filtrosAtivos.add('sl'); updateDash(); }
+  function updateDash() {
+    let c = document.getElementById('chips-filtros'); if(!c) return; c.innerHTML = '';
+    lideres.forEach(l => { c.innerHTML += '<button class="chip ' + (filtrosAtivos.has(String(l.id)) ? 'active' : '') + '" onclick="tgF(\'' + l.id + '\')">' + l.nome + '</button>'; });
+    c.innerHTML += '<button class="chip ' + (filtrosAtivos.has('sl') ? 'active' : '') + '" onclick="tgF(\'sl\')">SEM LÍDER</button>';
+    let pFilt = pessoas.filter(p => p.lider_id ? filtrosAtivos.has(String(p.lider_id)) : filtrosAtivos.has('sl'));
+    document.getElementById('stat-total-pessoas').innerText = pFilt.length;
+    let tVal = 0;
+    lideres.forEach(l => { if(filtrosAtivos.has(String(l.id))) { let q = pessoas.filter(p => p.lider_id == l.id).length; tVal += (q * (Number(l.valorPessoa)||50)) + (Number(l.valor)||0); } });
+    if(filtrosAtivos.has('sl')) { tVal += pessoas.filter(p => !p.lider_id).length * 50; }
+    document.getElementById('stat-total-orcamento').innerText = tVal.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    let w = document.getElementById('grafico-2-container'); w.innerHTML = ''; let mX = Math.max(...lideres.map(l => pessoas.filter(p => p.lider_id == l.id).length), 1);
+    lideres.forEach(l => { if(filtrosAtivos.has(String(l.id))) { let q = pessoas.filter(p => p.lider_id == l.id).length; w.innerHTML += '<div class="premium-bar-wrap"><div style="display:flex; justify-content:space-between;"><span>' + l.nome + '</span><strong>' + q + ' Fichas</strong></div><div class="premium-bar-bg"><div class="premium-bar-fill" style="width:' + (q>0 ? Math.max((q/mX)*100, 5) : 0) + '%; background:#10b981;"></div></div></div>'; } });
+  }
+  function tgF(id) { if(filtrosAtivos.has(id)) filtrosAtivos.delete(id); else filtrosAtivos.add(id); updateDash(); }
+
+  function atualizarTelaRelatorios() {
+    let d = document.getElementById('lista-lideres-imprimir'); if(!d) return;
+    d.innerHTML = '<label class="lider-checkbox-item" style="color:var(--primary); font-weight:bold;"><input type="checkbox" checked onchange="document.querySelectorAll(\'.cbox-lid\').forEach(c=>c.checked=this.checked)"> MARCAR TODOS</label>';
+    lideres.forEach(l => d.innerHTML += '<label class="lider-checkbox-item"><input type="checkbox" class="cbox-lid" value="' + l.id + '" checked> ' + l.nome + '</label>');
+  }
+  function imprimirRelatorio() {
+    let s = Array.from(document.querySelectorAll('.cbox-lid:checked')).map(c => Number(c.value)); if(!s.length) return alert('Selecione líder.');
+    let lf = lideres.filter(l => s.includes(l.id)), tp = document.getElementById('tipo-relatorio').value;
+    let h = '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;font-size:12px;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ccc;padding:8px;text-align:left;} th{background:#eee;} .avoid{page-break-inside:avoid;} .pg{page-break-before:always;} h3{background:#eee;padding:10px;border:1px solid #ccc;}</style></head><body><h2>Relatório ' + anoAtual + '</h2>';
+    if(tp === 'valores') {
+      h += '<table><tr><th>Líder</th><th>Cálculo</th><th>Total</th></tr>'; let tG = 0;
+      lf.forEach(l => { let q = pessoas.filter(p => p.lider_id == l.id).length, v = (Number(l.valor)||0) + (q * (Number(l.valorPessoa)||50)); tG += v; h += '<tr class="avoid"><td><strong>' + l.nome + '</strong><br>' + (l.obs||'') + '</td><td>' + (l.valor||0) + ' + ' + q + 'x' + (l.valorPessoa||50) + '</td><td>' + v.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</td></tr>'; });
+      h += '<tr><th colspan="2" style="text-align:right;">TOTAL GERAL</th><th>' + tG.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</th></tr></table>';
+    } else if(tp === 'resumo') {
+      h += '<table><tr><th>Líder</th><th>Qtd</th></tr>'; let tG = 0;
+      lf.forEach(l => { let q = pessoas.filter(p => p.lider_id == l.id).length; tG += q; h += '<tr class="avoid"><td><strong>' + l.nome + '</strong><br>' + (l.obs||'') + '</td><td>' + q + '</td></tr>'; });
+      h += '<tr><th style="text-align:right;">TOTAL GERAL</th><th>' + tG + '</th></tr></table>';
+    } else {
+      let cT = 0;
+      lf.forEach((l, i) => {
+        let ps = pessoas.filter(p => p.lider_id == l.id); cT += ps.length;
+        h += '<div class="' + (i > 0 ? 'pg' : '') + '"><h3>' + l.nome + ' (' + ps.length + ' Fichas)</h3>';
+        if(ps.length === 0) h += '<p>Sem fichas.</p>';
+        ps.forEach((p, x) => h += '<div class="avoid" style="border-bottom:1px solid #eee; padding:5px 0;"><strong>' + (x+1) + '. ' + p.nome + '</strong> | Fone: ' + p.fone + ' | CPF: ' + p.cpf + '<br>End: ' + p.endereco + ' - ' + p.bairro + ' | Tít: ' + p.titulo + ' | Z: ' + p.zona + ' S: ' + p.secao + '</div>');
+        h += '</div>';
+      });
+      h += '<br><h3 style="text-align:right;">TOTAL IMPRESSO: ' + cT + ' FICHAS</h3>';
+    }
+    h += '</body></html>'; let win = window.open('','_blank'); win.document.write(h); win.document.close(); setTimeout(() => win.print(), 500);
+  }
+
+  document.getElementById('btn-exportar-csv').addEventListener('click', () => {
+    if(!pessoas.length) return alert('Banco Vazio.');
+    let c = '\uFEFFLíder;Nome;Telefone;Endereço;Bairro;CPF;Título;Zona;Seção;Data\n';
+    pessoas.forEach(p => c += '"' + (p.lider_nome||'') + '";"' + (p.nome||'') + '";"' + (p.fone||'') + '";"' + (p.endereco||'') + '";"' + (p.bairro||'') + '";"' + (p.cpf||'') + '";"' + (p.titulo||'') + '";"' + (p.zona||'') + '";"' + (p.secao||'') + '";"' + (p.data_cadastro||'') + '"\n');
+    let l = document.createElement('a'); l.href = URL.createObjectURL(new Blob([c], {type: 'text/csv'})); l.download = 'fichas_' + anoAtual + '.csv'; l.click();
+  });
+  
+  function exportarBackupJSON() {
+    let b = { v: VERSAO_ATUAL, anos: anosDisp, d: {} };
+    anosDisp.forEach(a => { b.d[a] = { l: JSON.parse(localStorage.getItem('bd_lideres_' + a) || '[]'), p: JSON.parse(localStorage.getItem('bd_pessoas_' + a) || '[]') }; });
+    let l = document.createElement('a'); l.href = URL.createObjectURL(new Blob([JSON.stringify(b)], {type: 'application/json'})); l.download = 'backup_completo.json'; l.click();
+  }
+  
+  function importarBackupJSON(e) {
+    let f = e.target.files[0]; if(!f) return; let r = new FileReader();
+    r.onload = ev => {
+      try {
+        let d = JSON.parse(ev.target.result);
+        if(d.anos && d.d) {
+          if(confirm('Restaurar apaga tudo o que tem agora. Continuar?')) {
+            anosDisp = d.anos; localStorage.setItem('anosDisponiveis', JSON.stringify(anosDisp));
+            anosDisp.forEach(a => { localStorage.setItem('bd_lideres_' + a, JSON.stringify(d.d[a].l)); localStorage.setItem('bd_pessoas_' + a, JSON.stringify(d.d[a].p)); });
+            mudarAno(anosDisp[0]); alert('Backup Restaurado!');
+          }
+        }
+      } catch(err) { alert('Erro no ficheiro JSON.'); }
+    }; r.readAsText(f);
+  }
+  
+  function apagarAnoAtual() {
+    if(document.getElementById('senha-apagar').value.trim().toLowerCase() === 'wini') {
+      if(confirm('Tem a certeza ABSOLUTA que quer apagar todas as fichas e líderes de ' + anoAtual + '?')) {
+        lideres = []; pessoas = []; salvarDadosAno(); carregarDadosAno(); atualizarLideres(); renderizarPessoas();
+        document.getElementById('senha-apagar').value = ''; alert('Banco zerado com sucesso!');
+      }
+    } else alert('Senha Incorreta!');
+  }
+
+  try { carregarDadosAno(); atualizarLideres(); renderizarPessoas(); } catch(e) { console.error("Erro Init", e); }
+</script>
+</body>
+</html>
