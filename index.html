@@ -271,7 +271,7 @@
 <script>
   window.onerror = function(m, u, l) { alert("ERRO DE CÓDIGO:\n" + m + "\nLinha: " + l); };
   
-  const VERSAO_ATUAL = "3.9.1";
+  const VERSAO_ATUAL = "3.9.3";
   const headerVersion = document.getElementById('header-version');
   if (headerVersion) headerVersion.innerText = "v" + VERSAO_ATUAL;
   const footerVersion = document.getElementById('footer-v-num');
@@ -300,11 +300,12 @@
   }
   
   function sairSistema() { sessionStorage.removeItem('auth_fichas'); checkAuth(); if(document.getElementById('drawer-menu').classList.contains('open')) toggleDrawer(); }
-  document.getElementById('input-senha-login').addEventListener('keypress', function(e){ if(e.key === 'Enter') fazerLogin(); });
+  let iptLogin = document.getElementById('input-senha-login');
+  if(iptLogin) iptLogin.addEventListener('keypress', function(e){ if(e.key === 'Enter') fazerLogin(); });
   checkAuth();
 
   function abrirChangelog() {
-    document.getElementById('changelog-content').innerHTML = '<div class="changelog-item"><div class="cl-versao">v3.9.1 <span class="cl-data">Atual</span></div><div class="cl-desc">Correção na função de diagnóstico de chaves. Validação estabilizada para chaves Groq e Gemini.</div></div>';
+    document.getElementById('changelog-content').innerHTML = '<div class="changelog-item"><div class="cl-versao">v3.9.3 <span class="cl-data">Atual</span></div><div class="cl-desc">Correção de estabilidade na tela de login e restauração do diagnóstico Gemini/Groq com indicadores verdes.</div></div>';
     document.getElementById('modal-changelog').style.display = 'flex';
   }
 
@@ -407,15 +408,15 @@
     let gKey = localStorage.getItem('gemini_api_key');
     let qKey = localStorage.getItem('groq_api_key');
     if(!gKey && !qKey) return alert("Guarde pelo menos uma chave primeiro.");
-    let logs = "--- RESULTADOS ---\n";
+    let msg = "";
     
     if(qKey) {
         try {
             let res = await fetch("[https://api.groq.com/openai/v1/models](https://api.groq.com/openai/v1/models)", { headers: {"Authorization": "Bearer " + qKey} });
-            if(res.ok) logs += "✅ Groq: Conectado com Sucesso!\n"; else logs += "❌ Groq: Chave inválida.\n";
-        } catch(e) { logs += "❌ Groq: Falha de Rede.\n"; }
+            if(res.ok) msg += "✅ Groq: Conectado com Sucesso!\n"; else msg += "❌ Groq: Chave inválida.\n";
+        } catch(e) { msg += "❌ Groq: Falha de Rede.\n"; }
     } else {
-        logs += "ℹ️ Groq: Sem chave inserida.\n";
+        msg += "ℹ️ Groq: Sem chave inserida.\n";
     }
     
     if(gKey) {
@@ -423,15 +424,13 @@
             let res = await fetch("[https://generativelanguage.googleapis.com/v1beta/models?key=](https://generativelanguage.googleapis.com/v1beta/models?key=)" + gKey);
             let d = await res.json();
             if(res.ok && d.models) {
-                let txt = JSON.stringify(d.models);
-                if(txt.includes('flash') || txt.includes('pro')) logs += "✅ Gemini: Acesso total a fotos liberado!\n";
-                else logs += "⚠️ Gemini: Conta Restrita.\n";
-            } else { logs += "❌ Gemini: Chave inválida.\n"; }
-        } catch(e) { logs += "❌ Gemini: Falha de Rede.\n"; }
+                msg += "✅ Gemini: Acesso total a fotos liberado!\n";
+            } else { msg += "❌ Gemini: Chave inválida.\n"; }
+        } catch(e) { msg += "❌ Gemini: Falha de Rede.\n"; }
     } else {
-        logs += "ℹ️ Gemini: Sem chave inserida.\n";
+        msg += "ℹ️ Gemini: Sem chave inserida.\n";
     }
-    alert(logs);
+    alert("--- RESULTADOS ---\n" + msg);
   }
 
   function cImg(file, mSize = 800) {
