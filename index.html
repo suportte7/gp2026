@@ -157,7 +157,7 @@
       </div>
     </div>
 
-    <!-- Importar IA & Chat -->
+    <!-- Importar IA -->
     <div id="tab-importar" class="tab-content">
       <div class="card" style="border: 1px solid var(--primary);">
         <h2>🤖 Opção 1: Leitura IA (Híbrida)</h2>
@@ -271,7 +271,7 @@
 <script>
   window.onerror = function(m, u, l) { alert("ERRO DE CÓDIGO:\n" + m + "\nLinha: " + l); };
   
-  const VERSAO_ATUAL = "3.9.0";
+  const VERSAO_ATUAL = "3.9.1";
   const headerVersion = document.getElementById('header-version');
   if (headerVersion) headerVersion.innerText = "v" + VERSAO_ATUAL;
   const footerVersion = document.getElementById('footer-v-num');
@@ -304,7 +304,7 @@
   checkAuth();
 
   function abrirChangelog() {
-    document.getElementById('changelog-content').innerHTML = '<div class="changelog-item"><div class="cl-versao">v3.9.0 <span class="cl-data">Atual</span></div><div class="cl-desc">Adicionado botão de copiar prompt rápido para o chat, facilitando a importação segura via texto sempre que a rede móvel bloquear a IA direta.</div></div>';
+    document.getElementById('changelog-content').innerHTML = '<div class="changelog-item"><div class="cl-versao">v3.9.1 <span class="cl-data">Atual</span></div><div class="cl-desc">Correção na função de diagnóstico de chaves. Validação estabilizada para chaves Groq e Gemini.</div></div>';
     document.getElementById('modal-changelog').style.display = 'flex';
   }
 
@@ -313,7 +313,7 @@
     navigator.clipboard.writeText(p).then(() => {
       alert("📋 Prompt copiado com sucesso!\n\nAgora cole este prompt aqui no chat junto com a foto da ficha para eu gerar o JSON para si.");
     }).catch(err => {
-      alert("Não foi possível copiar automaticamente. Selecione e copie manualmente:\n\n" + p);
+      alert("Cópia manual:\n\n" + p);
     });
   }
 
@@ -414,6 +414,8 @@
             let res = await fetch("[https://api.groq.com/openai/v1/models](https://api.groq.com/openai/v1/models)", { headers: {"Authorization": "Bearer " + qKey} });
             if(res.ok) logs += "✅ Groq: Conectado com Sucesso!\n"; else logs += "❌ Groq: Chave inválida.\n";
         } catch(e) { logs += "❌ Groq: Falha de Rede.\n"; }
+    } else {
+        logs += "ℹ️ Groq: Sem chave inserida.\n";
     }
     
     if(gKey) {
@@ -421,11 +423,13 @@
             let res = await fetch("[https://generativelanguage.googleapis.com/v1beta/models?key=](https://generativelanguage.googleapis.com/v1beta/models?key=)" + gKey);
             let d = await res.json();
             if(res.ok && d.models) {
-                let txt = d.models.map(x => x.name).join('');
-                if(txt.includes('flash')) logs += "✅ Gemini: Acesso total a fotos liberado!\n";
-                else logs += "⚠️ Gemini: Conta Restrita. Só lê texto.\n";
+                let txt = JSON.stringify(d.models);
+                if(txt.includes('flash') || txt.includes('pro')) logs += "✅ Gemini: Acesso total a fotos liberado!\n";
+                else logs += "⚠️ Gemini: Conta Restrita.\n";
             } else { logs += "❌ Gemini: Chave inválida.\n"; }
         } catch(e) { logs += "❌ Gemini: Falha de Rede.\n"; }
+    } else {
+        logs += "ℹ️ Gemini: Sem chave inserida.\n";
     }
     alert(logs);
   }
