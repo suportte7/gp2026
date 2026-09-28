@@ -81,7 +81,7 @@
     <div class="field">
       <input type="password" id="input-senha-login" placeholder="A sua palavra-passe..." autocapitalize="off" style="text-transform: none; text-align: center;">
     </div>
-    <div id="login-erro" class="login-erro" style="color:red; font-weight:bold; margin-top:10px;">Senha incorreta! Tente novamente.</div>
+    <div id="login-erro" class="login-erro">Senha incorreta! Tente novamente.</div>
     <button class="btn success" style="margin-top: 20px;" onclick="fazerLogin()">Entrar no Sistema</button>
   </div>
 </div>
@@ -114,6 +114,7 @@
   </div>
 
   <div class="container">
+    <!-- Líderes -->
     <div id="tab-lideres" class="tab-content active">
       <div class="card">
         <h2>👤 Cadastrar Responsável</h2>
@@ -135,6 +136,7 @@
       </div>
     </div>
 
+    <!-- Cadastro Manual -->
     <div id="tab-cadastrar" class="tab-content">
       <div class="card">
         <h2>✍️ Cadastrar Pessoa (Manual)</h2>
@@ -155,6 +157,7 @@
       </div>
     </div>
 
+    <!-- Importar IA -->
     <div id="tab-importar" class="tab-content">
       <div class="card" style="border: 1px solid var(--primary);">
         <h2>🤖 Opção 1: Leitura IA (Híbrida)</h2>
@@ -174,6 +177,7 @@
       </div>
     </div>
 
+    <!-- Banco -->
     <div id="tab-banco" class="tab-content">
       <div class="card">
         <h2>🗂️ Banco de Dados (<span id="total-registos">0</span>)</h2>
@@ -183,6 +187,7 @@
       </div>
     </div>
 
+    <!-- Relatórios -->
     <div id="tab-relatorios" class="tab-content">
       <div class="card">
         <h2>🖨️ Impressão A4 (PDF)</h2>
@@ -200,6 +205,7 @@
       </div>
     </div>
 
+    <!-- Dashboard -->
     <div id="tab-graficos" class="tab-content">
       <div class="card">
         <h2>📊 Dashboard Interativo</h2>
@@ -212,11 +218,24 @@
       </div>
     </div>
 
+    <!-- Ferramentas -->
     <div id="tab-ferramentas" class="tab-content">
       <div class="card">
         <h2>📜 Histórico de Atualizações</h2>
         <button type="button" class="btn primary" onclick="abrirChangelog()">Ver Notas da Versão</button>
       </div>
+      
+      <!-- GERADOR DE DADOS FICTÍCIOS (TESTES) -->
+      <div class="card" style="border: 1px dashed var(--warning);">
+        <h2>🧪 Gerador de Dados Fictícios (Testes)</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Crie líderes e fichas automáticas para testar o sistema e os relatórios.</p>
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap:10px;">
+          <div class="field"><label>Qtd Líderes:</label><input type="number" id="gen-qtd-lideres" value="3" style="text-transform:none;"></div>
+          <div class="field"><label>Fichas/Líder:</label><input type="number" id="gen-qtd-pessoas" value="5" style="text-transform:none;"></div>
+        </div>
+        <button type="button" class="btn success" style="margin-top:12px;" onclick="gerarDadosFicticios()">Gerar Dados de Teste</button>
+      </div>
+
       <div class="card">
         <h2>⚙️ Configuração IA (Chaves)</h2>
         <div class="field"><label>Chave API Groq (Começa com gsk_):</label><input type="password" id="input-groq-key" style="text-transform: none;"></div>
@@ -264,9 +283,11 @@
 <script>
   window.onerror = function(m, u, l) { alert("ERRO DE CÓDIGO:\n" + m + "\nLinha: " + l); };
   
-  const VERSAO_ATUAL = "3.9.5";
-  document.getElementById('header-version').innerText = "v" + VERSAO_ATUAL;
-  document.getElementById('footer-v-num').innerText = VERSAO_ATUAL;
+  const VERSAO_ATUAL = "3.10.0";
+  const headerVersion = document.getElementById('header-version');
+  if (headerVersion) headerVersion.innerText = "v" + VERSAO_ATUAL;
+  const footerVersion = document.getElementById('footer-v-num');
+  if (footerVersion) footerVersion.innerText = VERSAO_ATUAL;
 
   const SENHA_ACESSO = "wini";
   let anoAtual = localStorage.getItem('anoAtual') || '2026';
@@ -295,7 +316,7 @@
   checkAuth();
 
   function abrirChangelog() {
-    document.getElementById('changelog-content').innerHTML = '<div class="changelog-item"><div class="cl-versao">v3.9.5 <span class="cl-data">Atual</span></div><div class="cl-desc">Correção total do motor de login e isolamento de variáveis para evitar travamentos na inicialização.</div></div>';
+    document.getElementById('changelog-content').innerHTML = '<div class="changelog-item"><div class="cl-versao">v3.10.0 <span class="cl-data">Atual</span></div><div class="cl-desc">Retorno do Gerador de Dados Fictícios para testes e suporte universal a qualquer formato de backup JSON (.anosDisponiveis / .dadosPorAno).</div></div>';
     document.getElementById('modal-changelog').style.display = 'flex';
   }
 
@@ -656,11 +677,17 @@
   });
   
   function exportarBackupJSON() {
-    let b = { v: VERSAO_ATUAL, anos: anosDisp, d: {} };
-    anosDisp.forEach(a => { b.d[a] = { l: JSON.parse(localStorage.getItem('bd_lideres_' + a) || '[]'), p: JSON.parse(localStorage.getItem('bd_pessoas_' + a) || '[]') }; });
-    let l = document.createElement('a'); l.href = URL.createObjectURL(new Blob([JSON.stringify(b)], {type: 'application/json'})); l.download = 'backup_completo.json'; l.click();
+    let b = { versao: VERSAO_ATUAL, tema: localStorage.getItem('temaPref') || 'azul', anosDisponiveis: anosDisp, dadosPorAno: {} };
+    anosDisp.forEach(a => { 
+      b.dadosPorAno[a] = { 
+        lideres: JSON.parse(localStorage.getItem('bd_lideres_' + a) || '[]'), 
+        pessoas: JSON.parse(localStorage.getItem('bd_pessoas_' + a) || '[]') 
+      }; 
+    });
+    let l = document.createElement('a'); l.href = URL.createObjectURL(new Blob([JSON.stringify(b, null, 2)], {type: 'application/json'})); l.download = 'backup_completo.json'; l.click();
   }
   
+  // RESTAURO UNIVERSAL DE BACKUP (SUPORTA AMBOS OS FORMATOS)
   let inputBackupEl = document.getElementById('input-backup');
   if(inputBackupEl) {
     inputBackupEl.addEventListener('change', function(e) {
@@ -669,14 +696,25 @@
       r.onload = function(ev) {
         try {
           let d = JSON.parse(ev.target.result);
-          if(d.anos && d.d) {
+          
+          // Compatibilidade com formato 1 (anosDisponiveis / dadosPorAno) e formato 2 (anos / d)
+          let anosArray = d.anosDisponiveis || d.anos;
+          let containerObj = d.dadosPorAno || d.d;
+
+          if(anosArray && containerObj) {
             if(confirm('Restaurar este backup vai substituir todos os dados atuais. Deseja continuar?')) {
-              anosDisp = d.anos; 
+              anosDisp = anosArray; 
               localStorage.setItem('anosDisponiveis', JSON.stringify(anosDisp));
+              
               anosDisp.forEach(a => { 
-                localStorage.setItem('bd_lideres_' + a, JSON.stringify(d.d[a].l || [])); 
-                localStorage.setItem('bd_pessoas_' + a, JSON.stringify(d.d[a].p || [])); 
+                let anoData = containerObj[a] || {};
+                let lList = anoData.lideres || anoData.l || [];
+                let pList = anoData.pessoas || anoData.p || [];
+                
+                localStorage.setItem('bd_lideres_' + a, JSON.stringify(lList)); 
+                localStorage.setItem('bd_pessoas_' + a, JSON.stringify(pList)); 
               });
+              
               mudarAno(anosDisp[0]); 
               alert('Backup restaurado com sucesso!');
             }
@@ -698,6 +736,55 @@
         document.getElementById('senha-apagar').value = ''; alert('Banco zerado com sucesso!');
       }
     } else alert('Senha Incorreta!');
+  }
+
+  // GERADOR DE DADOS FICTÍCIOS PARA TESTE
+  function gerarDadosFicticios() {
+    let qL = parseInt(document.getElementById('gen-qtd-lideres').value) || 3;
+    let qP = parseInt(document.getElementById('gen-qtd-pessoas').value) || 5;
+    let nomesL = ["JOÃO FERREIRA", "JULIA OLIVEIRA", "MARCOS SILVA", "BEATRIZ COSTA", "CARLOS ALVES"];
+    let locais = ["BOA VISTA", "CASA AMARELA", "MADALENA", "VÁRZEA", "DERBY"];
+    let bairros = ["BOA VIAGEM", "CENTRO", "DERBY", "PINA", "IMBIRIBEIRA"];
+    let fNames = ["LUCAS", "MARIA", "PEDRO", "JULIANA", "ROBERTO", "LARISSA", "GABRIEL"];
+    let lNames = ["SILVA", "SANTOS", "OLIVEIRA", "FERREIRA", "RODRIGUES", "ALVES"];
+
+    for(let i=0; i<qL; i++) {
+      let lId = Date.now() + i;
+      let lNome = nomesL[i % nomesL.length];
+      let lLocal = locais[i % locais.length];
+      lideres.push({
+        id: lId,
+        nome: lNome,
+        local: lLocal,
+        contato: "(81) 9" + Math.floor(1000 + Math.random()*9000) + "-" + Math.floor(1000 + Math.random()*9000),
+        valor: Math.floor(Math.random() * 100),
+        valorPessoa: 50,
+        obs: "LÍDER GERADO PARA TESTE"
+      });
+
+      for(let j=0; j<qP; j++) {
+        let f = fNames[Math.floor(Math.random()*fNames.length)];
+        let ln = lNames[Math.floor(Math.random()*lNames.length)];
+        pessoas.push({
+          id: Date.now() + i*1000 + j,
+          lider_id: lId,
+          lider_nome: lNome,
+          nome: f + " " + ln + " TESTE",
+          fone: "(81) 9" + Math.floor(1000 + Math.random()*9000) + "-" + Math.floor(1000 + Math.random()*9000),
+          cpf: Math.floor(100 + Math.random()*900) + "." + Math.floor(100 + Math.random()*900) + "." + Math.floor(100 + Math.random()*900) + "-" + Math.floor(10 + Math.random()*90),
+          endereco: "RUA DE TESTE, " + Math.floor(Math.random()*500),
+          bairro: bairros[Math.floor(Math.random()*bairros.length)],
+          titulo: Math.floor(100000000000 + Math.random()*900000000000).toString(),
+          zona: String(Math.floor(10 + Math.random()*90)),
+          secao: String(Math.floor(100 + Math.random()*900)),
+          data_cadastro: new Date().toLocaleDateString('pt-BR')
+        });
+      }
+    }
+    salvarDadosAno();
+    atualizarLideres();
+    renderizarPessoas();
+    alert(`Gerados com sucesso ${qL} líderes e ${qP * qL} fichas de teste!`);
   }
 
   try { carregarDadosAno(); atualizarLideres(); renderizarPessoas(); } catch(e) { console.error("Erro Init", e); }
