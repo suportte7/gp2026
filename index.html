@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Gestão</title>
+  <style>
+    :root {
+      --primary: #1e40af; --primary-hover: #1e3a8a;
+      --bg: #f1f5f9; --card: #ffffff; --border: #cbd5e1;
+      --text: #0f172a; --text-muted: #64748b;
+      --success: #15803d; --danger: #dc2626; --warning: #d97706; 
+      --nav-bg: #ffffff;
+    }
+    [data-theme="verde"] {
+      --primary: #065f46; --primary-hover: #047857;
+      --bg: #f0fdf4; --card: #ffffff; --border: #bbf7d0;
+      --text: #064e3b; --text-muted: #047857;
+      --success: #15803d; --danger: #dc2626; --warning: #d97706;
+      --nav-bg: #ffffff;
+    }
+    [data-theme="roxo"] {
+      --primary: #6b21a8; --primary-hover: #581c87;
+      --bg: #faf5ff; --card: #ffffff; --border: #e9d5ff;
+      --text: #3b0764; --text-muted: #7e22ce;
+      --success: #15803d; --danger: #dc2626; --warning: #d97706;
+      --nav-bg: #ffffff;
+    }
+    [data-theme="dark"] {
+      --primary: #3b82f6; --primary-hover: #60a5fa;
+      --bg: #0f172a; --card: #1e293b; --border: #334155;
+      --text: #f8fafc; --text-muted: #94a3b8;
+      --success: #22c55e; --danger: #ef4444; --warning: #fbbf24; 
+      --nav-bg: #1e293b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 30px; transition: 0.3s; }
+    
+    /* ECRÃ DE LOGIN */
+    .login-wrapper { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
+    .login-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 32px 24px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; animation: fadeIn 0.5s; }
+    .login-card h1 { color: var(--primary); font-size: 1.5rem; margin-bottom: 8px; }
+    .login-card p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px; }
+    .login-erro { color: var(--danger); font-size: 0.85rem; font-weight: bold; margin-top: 10px; display: none; background: rgba(220, 38, 38, 0.1); padding: 8px; border-radius: 6px; }
+
+    /* CABEÇALHO E RODAPÉ */
+    .app-header { background: var(--primary); color: white; padding: 12px 16px; font-weight: bold; position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .menu-btn, .theme-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; transition: 0.2s; }
+    .menu-btn:active, .theme-btn:active { transform: scale(0.95); }
+    .ano-badge { background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: normal; margin-top: 2px; display: inline-block; }
+    .versao-rodape { text-align: center; margin-top: 30px; padding-bottom: 10px; font-size: 0.75rem; color: var(--text-muted); opacity: 0.6; user-select: none; }
+
+    /* MENU LATERAL (DRAWER) */
+    .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 998; backdrop-filter: blur(2px); }
+    .drawer-menu { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--card); z-index: 999; box-shadow: 4px 0 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; transition: left 0.3s ease; }
+    .drawer-menu.open { left: 0; }
+    .drawer-header { background: var(--primary); color: white; padding: 20px; font-size: 1.2rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+    .drawer-close { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+    .drawer-items { display: flex; flex-direction: column; padding: 12px 0; overflow-y: auto; flex: 1; }
+    .drawer-item { background: none; border: none; text-align: left; padding: 14px 20px; font-size: 1rem; font-weight: 600; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--border); transition: background 0.2s; }
+    .drawer-item:hover, .drawer-item.active { background: var(--bg); color: var(--primary); }
+    .drawer-item.logout { color: var(--danger); margin-top: auto; border-bottom: none; border-top: 1px solid var(--border); }
+    .drawer-icon { font-size: 1.3rem; }
+
+    /* ESTRUTURA GERAL */
+    .container { max-width: 720px; margin: 16px auto; padding: 0 16px; display: flex; flex-direction: column; gap: 16px; min-height: 80vh; }
+    .tab-content { display: none; animation: fadeIn 0.3s; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 16px; }
+    h2 { font-size: 1.15rem; color: var(--primary); margin-bottom: 12px; border-bottom: 2px solid var(--border); padding-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    
+    .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+    label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+    input, select, textarea { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; width: 100%; outline: none; background: var(--bg); color: var(--text); text-transform: uppercase; }
+    input::placeholder, textarea::placeholder { text-transform: none; }
+    input:focus, select:focus { border-color: var(--primary); }
+    
+    button.btn { background: var(--primary); color: #fff; border: none; padding: 14px; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; width: 100%; text-align: center; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    button.btn:active { transform: scale(0.98); }
+    button.btn:disabled { opacity: 0.7; cursor: not-allowed; background: var(--text-muted); }
+    button.btn.sec { background: var(--text-muted); }
+    button.btn.success { background: var(--success); }
+    button.btn.danger { background: var(--danger); }
+    .btn-group { display: flex; gap: 10px; margin-top: 8px; }
+
+    .action-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+    .actions-container { display: flex; gap: 4px; }
+
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; background: var(--primary); color: white; font-weight: bold; }
+    .item-card { border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 10px; background: var(--bg); position: relative; overflow: hidden; }
+    .item-card strong { color: var(--primary); font-size: 1.1rem; }
+    .item-details { font-size: 0.9rem; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+
+    /* ALERTAS NA LISTA */
+    .alerta-formato { color: var(--warning); font-size: 0.8rem; font-weight: bold; display: flex; align-items: center; gap: 4px; margin-top: 6px; }
+    .alerta-duplicado-box { background: rgba(220, 38, 38, 0.08); border: 1px dashed var(--danger); padding: 8px; border-radius: 6px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .alerta-duplicado-text { color: var(--danger); font-size: 0.8rem; font-weight: bold; }
+    .btn-mesclar { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s; }
+
+    /* MODAIS & CHANGELOG */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 999; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(2px); }
+    .modal-box { background: var(--card); border-radius: 12px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .lider-checkbox-list { max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--bg); margin-bottom: 12px; }
+    .lider-checkbox-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 0.95rem; cursor: pointer; }
+
+    .changelog-item { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px dashed var(--border); }
+    .changelog-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .cl-versao { font-weight: bold; color: var(--primary); font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; }
+    .cl-data { font-size: 0.75rem; color: var(--text-muted); font-weight: normal; }
+    .cl-desc { font-size: 0.85rem; color: var(--text); margin-top: 6px; line-height: 1.4; padding-left: 10px; border-left: 3px solid var(--primary); }
+
+    /* DASHBOARD E GRÁFICOS */
+    .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+    .stat-box { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+    .stat-box span { font-size: 1.3rem; font-weight: bold; color: var(--primary); display: block; margin-top: 4px; }
+    .chips-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+    .chip { padding: 6px 12px; border-radius: 20px; border: 1px solid var(--primary); background: transparent; color: var(--primary); font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .chip.active { background: var(--primary); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+    .chart-header { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; margin-bottom: 10px; }
+    .chart-header h4 { font-size: 0.95rem; color: var(--text); margin: 0; }
+    .toggle-group { display: flex; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; }
+    .toggle-btn { background: none; border: none; padding: 6px 12px; font-size: 0.8rem; font-weight: bold; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
+    .toggle-btn.active { background: var(--primary); color: white; }
+
+    .donut-container { display: flex; flex-direction: column; align-items: center; gap: 14px; background: var(--bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border); animation: fadeIn 0.4s; }
+    .svg-donut-wrapper { position: relative; width: 160px; height: 160px; }
+    .donut-svg { transform: rotate(-90deg); width: 100%; height: 100%; border-radius: 50%; }
+    .donut-circle-bg { fill: transparent; stroke: var(--border); stroke-width: 3.5; }
+    .donut-segment { fill: transparent; stroke-width: 3.5; stroke-linecap: round; transition: stroke-dasharray 1s ease-out, stroke-dashoffset 1s ease-out; }
+    .donut-center-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+    .donut-center-text span { font-weight: bold; font-size: 1.4rem; color: var(--text); }
+    .donut-center-text small { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+    .stacked-bar-container { width: 100%; height: 34px; border-radius: 17px; overflow: hidden; display: flex; background: var(--border); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+    .stacked-segment { height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: bold; transition: width 1s ease; overflow: hidden; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+    
+    .chart-legend { width: 100%; display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; max-height: 200px; overflow-y: auto; }
+    .legend-item { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+
+    .premium-bar-wrap { background: var(--bg); padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border); transition: 0.3s; }
+    .premium-bar-bg { height: 12px; background: var(--border); border-radius: 6px; overflow: hidden; margin-top: 6px; position: relative; }
+    @keyframes slideGrow { from { width: 0%; opacity: 0; } to { width: var(--w); opacity: 1; } }
+    .premium-bar-fill { height: 100%; border-radius: 6px; width: 0%; animation: slideGrow 1s cubic-bezier(0.1, 0.8, 0.2, 1) forwards; position: relative; }
+  </style>
+</head>
+<body>
+
+<!-- TELA DE LOGIN / ACESSO RESTRITO -->
+<div id="login-screen" class="login-wrapper">
+  <div class="login-card">
+    <h1>🔐 Acesso Restrito</h1>
+    <p>Insira a sua senha para acessar o sistema.</p>
+    <div class="field">
+      <input type="password" id="input-senha-login" placeholder="Sua senha..." autocapitalize="off" style="text-transform: none; text-align: center; font-size: 1.2rem; letter-spacing: 2px;">
+    </div>
+    <div id="login-erro" class="login-erro">Senha incorreta! Tente novamente.</div>
+    <button class="btn success" style="margin-top: 20px;" onclick="fazerLogin()">Entrar no Sistema</button>
+  </div>
+</div>
+
+<!-- APLICAÇÃO PRINCIPAL -->
+<div id="app-content" style="display: none;">
+
+  <div class="app-header">
+    <div style="display:flex; align-items:center; gap: 10px;">
+      <button class="menu-btn" onclick="toggleDrawer()">☰</button>
+      <div style="display:flex; flex-direction:column; align-items:flex-start;">
+        <span style="font-size: 1.1rem;">Gestão de Fichas <span id="header-version" style="font-size:0.6rem; opacity:0.8; margin-left:4px;"></span></span>
+        <div class="ano-badge">Ano Base: <span id="header-ano-text">2026</span></div>
+      </div>
+    </div>
+    <button class="theme-btn" onclick="ciclarTema()">🌓 Tema</button>
+  </div>
+
+  <!-- MENU LATERAL -->
+  <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
+  <div class="drawer-menu" id="drawer-menu">
+    <div class="drawer-header">
+      <span>Menu Principal</span>
+      <button class="drawer-close" onclick="toggleDrawer()">✕</button>
+    </div>
+    <div class="drawer-items">
+      <button class="drawer-item active" onclick="switchTab('tab-lideres', this)"><span class="drawer-icon">👤</span>Líderes</button>
+      <button class="drawer-item" onclick="switchTab('tab-cadastrar', this)"><span class="drawer-icon">✍️</span>Novo Cadastro</button>
+      <button class="drawer-item" onclick="switchTab('tab-importar', this)"><span class="drawer-icon">📸</span>Importação & IA</button>
+      <button class="drawer-item" onclick="switchTab('tab-banco', this)"><span class="drawer-icon">🗂️</span>Banco Completo</button>
+      <button class="drawer-item" onclick="switchTab('tab-relatorios', this)"><span class="drawer-icon">🖨️</span>Relatórios & PDF</button>
+      <button class="drawer-item" onclick="switchTab('tab-graficos', this)"><span class="drawer-icon">📊</span>Dashboard Interativo</button>
+      <button class="drawer-item" onclick="switchTab('tab-ferramentas', this)"><span class="drawer-icon">🛠️</span>Configurações & Anos</button>
+      <button class="drawer-item logout" onclick="sairSistema()"><span class="drawer-icon">🚪</span>Sair (Bloquear)</button>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- TELA 1: LÍDERES -->
+    <div id="tab-lideres" class="tab-content active">
+      <div class="card">
+        <h2>👤 Cadastrar Responsável</h2>
+        <form id="form-lider" class="grid">
+          <div class="field"><label>Nome do Responsável:</label><input type="text" id="lider-nome" required></div>
+          <div class="field"><label>Local / Região:</label><input type="text" id="lider-local" required></div>
+          <div class="field"><label>Contato:</label><input type="text" id="lider-contato" maxlength="15" required></div>
+          <div style="display: flex; gap: 10px;">
+            <div class="field" style="flex:1"><label>Valor Fixo:</label><input type="number" step="0.01" id="lider-valor" placeholder="0.00" style="text-transform: none;"></div>
+            <div class="field" style="flex:1"><label>Pág. por Pessoa:</label><input type="number" step="0.01" id="lider-valor-pessoa" placeholder="Padrão 50" style="text-transform: none;"></div>
+          </div>
+          <div class="field"><label>Observação (Opcional):</label><input type="text" id="lider-obs" placeholder="Ex: Exclusivo zona norte"></div>
+          <button type="submit" class="btn" style="margin-top: 8px;">Salvar Responsável</button>
+        </form>
+      </div>
+      <div class="card">
+        <h2>📋 Responsáveis Deste Ano (<span id="span-ano-lista-lideres"></span>)</h2>
+        <div id="lista-lideres"></div>
+      </div>
+    </div>
+
+    <!-- TELA 2: CADASTRO MANUAL -->
+    <div id="tab-cadastrar" class="tab-content">
+      <div class="card">
+        <h2>✍️ Cadastrar Pessoa (Manual)</h2>
+        <form id="form-pessoa-manual" class="grid">
+          <div class="field"><label>Responsável / Líder:</label><select id="cad-pessoa-lider" required></select></div>
+          <div class="field"><label>Nome Completo:</label><input type="text" id="cad-nome" required></div>
+          <div class="field"><label>Telefone:</label><input type="text" id="cad-fone" style="text-transform: none;"></div>
+          <div class="field"><label>CPF (Opcional):</label><input type="text" id="cad-cpf" style="text-transform: none;" placeholder="000.000.000-00"></div>
+          <div class="field"><label>Endereço:</label><input type="text" id="cad-endereco"></div>
+          <div class="field"><label>Bairro:</label><input type="text" id="cad-bairro"></div>
+          <div class="field"><label>Título (Opcional):</label><input type="text" id="cad-titulo" style="text-transform: none;"></div>
+          <div style="display:flex;gap:10px;">
+            <div class="field" style="flex:1"><label>Zona:</label><input type="text" id="cad-zona" style="text-transform: none;"></div>
+            <div class="field" style="flex:1"><label>Seção:</label><input type="text" id="cad-secao" style="text-transform: none;"></div>
+          </div>
+          <button type="submit" class="btn success" style="margin-top: 8px;">Salvar Pessoa</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TELA 3: IMPORTAÇÃO MISTA -->
+    <div id="tab-importar" class="tab-content">
+      <div class="card" style="border: 1px solid var(--primary);">
+        <h2>🤖 Opção 1: Leitura Automática (IA)</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Tire ou escolha uma foto da ficha. *Requer chave da API na aba Configurações.</p>
+        <div class="field" style="margin-bottom: 12px;">
+          <label>Vincular a qual Líder?</label>
+          <select id="select-lider-ia-foto" required></select>
+        </div>
+        <div class="field" style="margin-bottom: 12px;">
+          <label>Tirar ou Anexar Foto da Ficha:</label>
+          <input type="file" id="input-foto-ficha" accept="image/*" capture="environment" style="text-transform: none; padding: 8px;">
+        </div>
+        <button type="button" id="btn-processar-foto" class="btn primary" onclick="processarImagemGemini()">📷 Processar Ficha</button>
+      </div>
+
+      <div class="card">
+        <h2>💬 Opção 2: Importar via Chat (Manual)</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Use se a IA direta falhar. Cole o código JSON gerado no chat.</p>
+        <div class="field" style="margin-bottom: 12px;">
+          <label>Vincular a qual Líder?</label>
+          <select id="select-lider-ia-texto" required></select>
+        </div>
+        <div class="field" style="margin-bottom: 16px;">
+          <label>Cole o Código (JSON) aqui:</label>
+          <textarea id="json-input" rows="4" style="text-transform: none;" placeholder='[{"nome": "MARIA", "fone": "...", ...}]'></textarea>
+        </div>
+        <button type="button" id="btn-iniciar-conferencia" class="btn success">✔ Importar Texto</button>
+      </div>
+    </div>
+
+    <!-- TELA 4: BANCO COMPLETO -->
+    <div id="tab-banco" class="tab-content">
+      <div class="card">
+        <h2>🗂️ Banco de Dados (<span id="total-registos">0</span>)</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Erros de formato e duplicidades aparecerão sinalizados abaixo.</p>
+        <div class="field" style="margin-bottom: 12px;"><input type="text" id="busca-banco" placeholder="🔍 Buscar nome/CPF..." oninput="renderizarPessoas(this.value)"></div>
+        <button type="button" id="btn-exportar-csv" class="btn sec" style="margin-bottom: 16px;">Baixar Planilha (Excel)</button>
+        <div id="lista-pessoas"></div>
+      </div>
+    </div>
+
+    <!-- TELA 5: RELATÓRIOS -->
+    <div id="tab-relatorios" class="tab-content">
+      <div class="card">
+        <h2>🖨️ Impressão de Listas A4 (PDF)</h2>
+        <div class="field" style="margin-bottom: 16px;">
+          <label>Qual modelo deseja imprimir?</label>
+          <select id="tipo-relatorio">
+            <option value="valores">Lista de Valores por Líder</option>
+            <option value="resumo">Lista Líder (Resumo de Quantidades)</option>
+            <option value="cadastros">Lista de Cadastros por Líder (Completa)</option>
+          </select>
+          <small style="color:var(--text-muted); font-size:0.75rem; display:block; margin-top:4px;">* Listas formatadas com sombra suave e sem unidade monetária para facilitar a leitura no papel. Ordenadas do maior para o menor.</small>
+        </div>
+        <label>Selecione os líderes para a impressão:</label>
+        <div class="lider-checkbox-list" id="lista-lideres-imprimir"></div>
+        <button type="button" class="btn success" onclick="imprimirRelatorio()">🖨️ Gerar Documento A4</button>
+      </div>
+    </div>
+
+    <!-- TELA 6: DASHBOARD DINÂMICO -->
+    <div id="tab-graficos" class="tab-content">
+      <div class="card">
+        <h2>📊 Dashboard Interativo</h2>
+        <div class="stat-grid" style="margin-top: 10px;">
+          <div class="stat-box"><label>Fichas (Filtro)</label><span id="stat-total-pessoas">0</span></div>
+          <div class="stat-box"><label>Orçamento (Filtro)</label><span id="stat-total-orcamento">0,00</span></div>
+        </div>
+        <div style="margin-top: 16px; margin-bottom: 8px;">
+          <label style="color: var(--primary);">🎯 Filtrar Responsáveis:</label>
+          <div class="chips-container" id="chips-filtros"></div>
+        </div>
+        <div class="chart-header">
+          <h4>1. Distribuição de Fichas (%)</h4>
+          <div class="toggle-group">
+            <button class="toggle-btn active" id="btn-tipo1-pizza" onclick="setGrafico1('pizza')">🍕 SVG Pizza</button>
+            <button class="toggle-btn" id="btn-tipo1-barra" onclick="setGrafico1('barra')">📏 Empilhada</button>
+          </div>
+        </div>
+        <div id="grafico-1-container" class="donut-container"></div>
+        <div class="chart-header" style="margin-top: 24px;">
+          <h4>2. Ranking de Lideranças</h4>
+          <div class="toggle-group">
+            <button class="toggle-btn active" id="btn-tipo2-qtd" onclick="setGrafico2('qtd')">👥 Fichas</button>
+            <button class="toggle-btn" id="btn-tipo2-val" onclick="setGrafico2('val')">💰 Valores</button>
+          </div>
+        </div>
+        <div id="grafico-2-container" style="display: flex; flex-direction: column; gap: 4px;"></div>
+      </div>
+    </div>
+
+    <!-- TELA 7: FERRAMENTAS E ANOS -->
+    <div id="tab-ferramentas" class="tab-content">
+      
+      <div class="card">
+        <h2>📜 Histórico de Atualizações</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Consulte todas as novidades e melhorias do sistema.</p>
+        <button type="button" class="btn primary" onclick="abrirChangelog()">Ver Notas da Versão</button>
+      </div>
+
+      <div class="card">
+        <h2>⚙️ Configuração da Inteligência Artificial</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Cole a sua chave gratuita do Google AI Studio.</p>
+        <div class="field">
+          <label>Chave da API (Gemini):</label>
+          <input type="password" id="input-api-key" placeholder="AQ. ou AIza..." style="text-transform: none;">
+        </div>
+        <button type="button" class="btn sec" style="margin-top:8px;" onclick="salvarApiKey()">💾 Guardar Chave no Celular</button>
+      </div>
+      
+      <div class="card" style="border: 1px solid var(--primary);">
+        <h2>📅 Gerenciador de Ciclos (Anos)</h2>
+        <div class="field">
+          <label>Mudar de Ano:</label>
+          <select id="select-ano" onchange="mudarAno(this.value)" style="text-transform: none; background: rgba(0,0,0,0.03);"></select>
+        </div>
+        <div style="display:flex; justify-content:center; margin-top:16px;">
+          <button type="button" class="btn success" onclick="abrirModalNovoAno()">Criar Novo Ano</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🛠️ Backup Geral do Sistema</h2>
+        <div class="grid" style="gap: 14px;">
+          <button type="button" class="btn" onclick="exportarBackupJSON()">💾 Fazer Backup (Descarregar JSON)</button>
+          <div class="field">
+            <label>Restaurar Backup:</label>
+            <input type="file" id="input-backup" accept=".json" onchange="importarBackupJSON(event)" style="text-transform: none;">
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="border-color: var(--danger);">
+        <h2 style="color: var(--danger);">⚠️ Zona de Perigo</h2>
+        <div class="field">
+          <label>Senha para apagar (wini):</label>
+          <input type="password" id="senha-apagar" autocapitalize="off" style="text-transform: none;">
+        </div>
+        <button type="button" class="btn danger" style="margin-top: 12px;" onclick="apagarAnoAtual()">Apagar Banco Deste Ano</button>
+      </div>
+    </div>
+    
+    <!-- MARCA DE ÁGUA / RODAPÉ -->
+    <div class="versao-rodape" id="footer-versao">
+      Gestão de Fichas - Versão <span id="footer-v-num"></span><br>
+      Desenvolvido com Inteligência Artificial
+    </div>
+
+  </div>
+</div> <!-- FIM DO APP-CONTENT -->
+
+<!-- MODAIS -->
+<div class="modal-overlay" id="modal-changelog">
+  <div class="modal-box">
+    <h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">📜 Histórico de Versões</h3>
+    <div id="changelog-content" style="display:flex; flex-direction:column; max-height:50vh; overflow-y:auto; padding-right:10px; margin-top:10px;"></div>
+    <div class="btn-group" style="margin-top: 16px;"><button class="btn sec" onclick="fecharModais()">Fechar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-novo-ano">
+  <div class="modal-box">
+    <h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">📅 Iniciar Novo Ano</h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Crie um novo ciclo. Escolha o que deseja trazer de <strong id="span-ano-atual"></strong>:</p>
+    <div class="field"><label>Digite o Novo Ano:</label><input type="number" id="input-novo-ano-modal" placeholder="Ex: 2028" style="text-transform: none;"></div>
+    <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
+      <label style="display:flex; align-items:flex-start; gap:10px; background:var(--bg); padding:12px; border:1px solid var(--border); border-radius:8px; cursor:pointer;">
+        <input type="radio" name="opcao_migracao" value="lideres" checked style="margin-top:4px;">
+        <div><strong style="color:var(--primary);">1. Trazer apenas Líderes</strong><p style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">Copia os responsáveis e zera as fichas.</p></div>
+      </label>
+      <label style="display:flex; align-items:flex-start; gap:10px; background:var(--bg); padding:12px; border:1px solid var(--border); border-radius:8px; cursor:pointer;">
+        <input type="radio" name="opcao_migracao" value="tudo" style="margin-top:4px;">
+        <div><strong style="color:var(--primary);">2. Clonar Tudo</strong><p style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">Copia a base inteira exatamente como está.</p></div>
+      </label>
+      <label style="display:flex; align-items:flex-start; gap:10px; background:var(--bg); padding:12px; border:1px solid var(--border); border-radius:8px; cursor:pointer;">
+        <input type="radio" name="opcao_migracao" value="zero" style="margin-top:4px;">
+        <div><strong style="color:var(--primary);">3. Começar do Zero</strong><p style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">Cria um banco totalmente vazio.</p></div>
+      </label>
+    </div>
+    <div class="btn-group" style="margin-top: 16px;"><button class="btn success" onclick="confirmarNovoAno()" style="flex:2;">Criar</button><button class="btn sec" onclick="fecharModais()" style="flex:1;">Cancelar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-mesclar">
+  <div class="modal-box">
+    <h3 style="color:var(--danger);border-bottom:1px solid var(--border);padding-bottom:10px;">🔗 Mesclar Conflitos</h3>
+    <div id="mesclar-opcoes" style="display:flex; flex-direction:column; gap:10px; max-height:40vh; overflow-y:auto; padding:4px;"></div>
+    <div class="btn-group" style="margin-top: 16px;"><button class="btn success" onclick="confirmarMesclagem()" style="flex:2;">Confirmar Mesclagem</button><button class="btn sec" onclick="fecharModais()" style="flex:1;">Cancelar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-conferencia">
+  <div class="modal-box">
+    <h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">Conferir Importação (<span id="modal-contador"></span>)</h3>
+    <div class="grid">
+      <div class="field"><label>Nome:</label><input type="text" id="conf-nome"></div>
+      <div class="field"><label>Fone:</label><input type="text" id="conf-fone" style="text-transform: none;"></div>
+      <div class="field"><label>CPF (Opcional):</label><input type="text" id="conf-cpf" style="text-transform: none;"></div>
+      <div class="field"><label>Endereço:</label><input type="text" id="conf-endereco"></div>
+      <div class="field"><label>Bairro:</label><input type="text" id="conf-bairro"></div>
+      <div class="field"><label>Título (Opcional):</label><input type="text" id="conf-titulo" style="text-transform: none;"></div>
+      <div style="display:flex;gap:10px;"><div class="field" style="flex:1"><label>Zona:</label><input type="text" id="conf-zona" style="text-transform: none;"></div><div class="field" style="flex:1"><label>Seção:</label><input type="text" id="conf-secao" style="text-transform: none;"></div></div>
+    </div>
+    <div class="btn-group"><button class="btn success" id="btn-aprovar-ficha" style="flex:2;">Salvar</button><button class="btn sec" id="btn-pular-ficha" style="flex:1;">Pular</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-editar-pessoa">
+  <div class="modal-box">
+    <h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">Editar Pessoa</h3>
+    <input type="hidden" id="edit-pessoa-id">
+    <div class="grid">
+      <div class="field"><label>Responsável:</label><select id="edit-pessoa-lider"></select></div>
+      <div class="field"><label>Nome:</label><input type="text" id="edit-pessoa-nome"></div>
+      <div class="field"><label>Fone:</label><input type="text" id="edit-pessoa-fone" style="text-transform: none;"></div>
+      <div class="field"><label>CPF:</label><input type="text" id="edit-pessoa-cpf" style="text-transform: none;"></div>
+      <div class="field"><label>Endereço:</label><input type="text" id="edit-pessoa-endereco"></div>
+      <div class="field"><label>Bairro:</label><input type="text" id="edit-pessoa-bairro"></div>
+      <div class="field"><label>Título:</label><input type="text" id="edit-pessoa-titulo" style="text-transform: none;"></div>
+      <div style="display:flex;gap:10px;"><div class="field" style="flex:1"><label>Zona:</label><input type="text" id="edit-pessoa-zona" style="text-transform: none;"></div><div class="field" style="flex:1"><label>Seção:</label><input type="text" id="edit-pessoa-secao" style="text-transform: none;"></div></div>
+    </div>
+    <div class="btn-group"><button class="btn success" onclick="salvarEdicaoPessoa()" style="flex:2;">Salvar</button><button class="btn sec" onclick="fecharModais()" style="flex:1;">Cancelar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-editar-lider">
+  <div class="modal-box">
+    <h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">Editar Responsável</h3>
+    <input type="hidden" id="edit-lider-id">
+    <div class="grid">
+      <div class="field"><label>Nome:</label><input type="text" id="edit-lider-nome"></div>
+      <div class="field"><label>Local:</label><input type="text" id="edit-lider-local"></div>
+      <div class="field"><label>Contato:</label><input type="text" id="edit-lider-contato" style="text-transform: none;"></div>
+      <div style="display:flex;gap:10px;"><div class="field" style="flex:1"><label>Valor Fixo:</label><input type="number" step="0.01" id="edit-lider-valor" style="text-transform: none;"></div><div class="field" style="flex:1"><label>Valor por Pessoa:</label><input type="number" step="0.01" id="edit-lider-valor-pessoa" style="text-transform: none;"></div></div>
+      <div class="field"><label>Observação:</label><input type="text" id="edit-lider-obs"></div>
+    </div>
+    <div class="btn-group"><button class="btn success" onclick="salvarEdicaoLider()" style="flex:2;">Salvar</button><button class="btn sec" onclick="fecharModais()" style="flex:1;">Cancelar</button></div>
+  </div>
+</div>
+
+<script>
+  // ==========================================
+  // CONTROLO DE VERSÕES
+  // ==========================================
+  const VERSAO_ATUAL = "3.2.2";
+  document.getElementById('header-version').innerText = `v${VERSAO_ATUAL}`;
+  document.getElementById('footer-v-num').innerText = VERSAO_ATUAL;
+
+  const HISTORICO_VERSOES = [
+    { v: "3.2.2", data: "Atual", desc: "Ajuste em relatórios: remoção do título da coluna de cálculo e adição da observação do líder de forma suave nas listas de resumo." },
+    { v: "3.2.1", data: "Anterior", desc: "Ajuste fino nas impressões: ordenação do maior para o menor total, cálculo em coluna própria e limpeza de termos no sistema." },
+    { v: "3.2.0", data: "Anterior", desc: "Adicionado sombreamento alternado nas listas de impressão e novo padrão fixo de exibição dos Líderes." },
+    { v: "3.1.0", data: "Anterior", desc: "Novo Motor de Impressão nativo otimizado para A4 (com quebra de páginas por líder) e Gestor de Histórico." },
+    { v: "3.0.0", data: "Anterior", desc: "Adicionado Gestor de Anos (Ciclos), mesclar conflitos, compressão de imagens offline e blindagem da API Gemini." }
+  ];
+
+  function abrirChangelog() {
+    const box = document.getElementById('changelog-content'); box.innerHTML = '';
+    HISTORICO_VERSOES.forEach(item => { box.innerHTML += `<div class="changelog-item"><div class="cl-versao">v${item.v} <span class="cl-data">${item.data}</span></div><div class="cl-desc">${item.desc}</div></div>`; });
+    document.getElementById('modal-changelog').style.display = 'flex';
+  }
+
+  // ==========================================
+  // LOGIN E SEGURANÇA
+  // ==========================================
+  const SENHA_ACESSO = "wini";
+  function checkAuth() {
+    if(sessionStorage.getItem('auth_fichas') === 'true') { document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-content').style.display = 'block'; } 
+    else { document.getElementById('login-screen').style.display = 'flex'; document.getElementById('app-content').style.display = 'none'; }
+  }
+  function fazerLogin() {
+    const s = document.getElementById('input-senha-login').value.trim().toLowerCase();
+    if(s === SENHA_ACESSO.toLowerCase()) { sessionStorage.setItem('auth_fichas', 'true'); document.getElementById('login-erro').style.display = 'none'; document.getElementById('input-senha-login').value = ''; checkAuth(); } 
+    else { document.getElementById('login-erro').style.display = 'block'; }
+  }
+  function sairSistema() { sessionStorage.removeItem('auth_fichas'); checkAuth(); const menu = document.getElementById('drawer-menu'); if (menu.classList.contains('open')) toggleDrawer(); }
+  document.getElementById('input-senha-login').addEventListener('keypress', function (e) { if (e.key === 'Enter') fazerLogin(); });
+  checkAuth();
+
+  // ==========================================
+  // CONFIGS E IA
+  // ==========================================
+  document.getElementById('input-api-key').value = localStorage.getItem('gemini_api_key') || '';
+  function salvarApiKey() { let k = document.getElementById('input-api-key').value.replace(/\s+/g, ''); localStorage.setItem('gemini_api_key', k); alert('Chave API guardada!'); }
+  function comprimirImagemBase64(file, max_size = 1000) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          let width = img.width; let height = img.height;
+          if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } else { if (height > max_size) { width *= max_size / height; height = max_size; } }
+          const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); resolve(canvas.toDataURL('image/jpeg', 0.6));
+        };
+        img.onerror = () => reject(new Error("Falha ao carregar a imagem.")); img.src = event.target.result;
+      }; reader.onerror = () => reject(new Error("Falha ao ler o ficheiro.")); reader.readAsDataURL(file);
+    });
+  }
+  async function processarImagemGemini() {
+    const apiKey = localStorage.getItem('gemini_api_key');
+    if (!apiKey) return alert("Cole a sua Chave da API na aba Ferramentas primeiro.");
+    if (!navigator.onLine && location.protocol !== 'file:') return alert("Está sem internet! Conecte-se à rede.");
+    const lid = document.getElementById('select-lider-ia-foto').value; if(!lid) return alert('Selecione o líder.');
+    const fileInput = document.getElementById('input-foto-ficha'); const file = fileInput.files[0]; if (!file) return alert("Tire uma fotografia da ficha.");
+    const btn = document.getElementById('btn-processar-foto'); btn.innerText = "⏳ A comprimir e enviar..."; btn.disabled = true;
+    try {
+      const base64Data = await comprimirImagemBase64(file); const base64Limpo = base64Data.split(',')[1];
+      const promptIA = "Você é um assistente de digitação. Leia esta ficha e extraia os dados para um array JSON contendo um único objeto com as chaves exatas (tudo minúsculo): 'nome', 'fone', 'cpf', 'endereco', 'bairro', 'titulo', 'zona', 'secao'. Deixe o valor vazio ('') se não encontrar. Não use markdown (```json), devolva apenas o array JSON válido.";
+      const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 25000);
+      const response = await fetch(`[https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$](https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$){apiKey}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal,
+        body: JSON.stringify({ contents: [{ parts: [ { text: promptIA }, { inline_data: { mime_type: 'image/jpeg', data: base64Limpo } } ] }] })
+      });
+      clearTimeout(timeoutId);
+      const responseText = await response.text(); let data;
+      try { data = JSON.parse(responseText); } catch (e) { if(responseText.includes('<html')) { throw new Error("A sua internet intercetou a ligação ou o navegador bloqueou o envio local. Tente num ambiente Web ou mude de rede."); } throw new Error("Resposta inválida da API."); }
+      if(!response.ok || data.error) { throw new Error(data.error ? data.error.message : "Erro " + response.status); }
+      let textoResposta = data.candidates[0].content.parts[0].text; textoResposta = textoResposta.replace(/```json/g, '').replace(/```/g, '').trim();
+      loteEmConferencia = JSON.parse(textoResposta); if(!Array.isArray(loteEmConferencia)) loteEmConferencia = [loteEmConferencia];
+      liderAtivo = lideres.find(l => l.id == lid); indiceAtual = 0; abrirFichaModal(indiceAtual);
+    } catch (error) {
+      if (error.name === 'AbortError') alert("O servidor demorou muito a responder. Tente novamente."); else if (error.message.includes('Failed to fetch')) alert("Erro 'Failed to fetch'. Como está a correr localmente no telemóvel, o Chrome pode estar a bloquear o envio. Suba a versão para o GitHub como falámos!"); else alert("Erro ao processar: " + error.message);
+    } finally { btn.innerText = "📷 Processar Ficha"; btn.disabled = false; fileInput.value = ''; }
+  }
+
+  // ==========================================
+  // GAVETA E TEMA
+  // ==========================================
+  function toggleDrawer() { const menu = document.getElementById('drawer-menu'); const overlay = document.getElementById('drawer-overlay'); if (menu.classList.contains('open')) { menu.classList.remove('open'); overlay.style.display = 'none'; } else { menu.classList.add('open'); overlay.style.display = 'block'; } }
+  const temas = ['azul', 'verde', 'roxo', 'dark']; let temaAtualIndex = temas.indexOf(localStorage.getItem('temaPref') || 'azul'); if (temaAtualIndex === -1) temaAtualIndex = 0;
+  function ciclarTema() { temaAtualIndex = (temaAtualIndex + 1) % temas.length; const novoTema = temas[temaAtualIndex]; if (novoTema === 'azul') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', novoTema); localStorage.setItem('temaPref', novoTema); }
+  if ((localStorage.getItem('temaPref') || 'azul') !== 'azul') document.documentElement.setAttribute('data-theme', localStorage.getItem('temaPref'));
+
+  // ==========================================
+  // ANOS (CICLOS)
+  // ==========================================
+  let anoAtual = localStorage.getItem('anoAtual') || '2026'; let anosDisponiveis = JSON.parse(localStorage.getItem('anosDisponiveis') || '["2026"]'); let lideres = []; let pessoas = [];
+  if (localStorage.getItem('bd_lideres') && !localStorage.getItem('bd_lideres_2026')) { localStorage.setItem('bd_lideres_2026', localStorage.getItem('bd_lideres')); localStorage.setItem('bd_pessoas_2026', localStorage.getItem('bd_pessoas')); }
+  function carregarDadosAno() { lideres = JSON.parse(localStorage.getItem(`bd_lideres_${anoAtual}`) || '[]'); pessoas = JSON.parse(localStorage.getItem(`bd_pessoas_${anoAtual}`) || '[]'); document.getElementById('header-ano-text').innerText = anoAtual; document.getElementById('span-ano-lista-lideres').innerText = anoAtual; atualizarSelectAnosUI(); }
+  function salvarDadosAno() { localStorage.setItem(`bd_lideres_${anoAtual}`, JSON.stringify(lideres)); localStorage.setItem(`bd_pessoas_${anoAtual}`, JSON.stringify(pessoas)); }
+  function atualizarSelectAnosUI() { const sel = document.getElementById('select-ano'); sel.innerHTML = anosDisponiveis.map(a => `<option value="${a}" ${a === anoAtual ? 'selected' : ''}>${a}</option>`).join(''); }
+  function mudarAno(novoAno) { if (!anosDisponiveis.includes(novoAno)) return; anoAtual = novoAno; localStorage.setItem('anoAtual', anoAtual); carregarDadosAno(); atualizarLideres(); renderizarPessoas(); if (document.getElementById('tab-graficos').classList.contains('active')) iniciarDashboard(); }
+  function abrirModalNovoAno() { document.getElementById('span-ano-atual').innerText = anoAtual; document.getElementById('input-novo-ano-modal').value = ''; document.getElementById('modal-novo-ano').style.display = 'flex'; }
+  function confirmarNovoAno() {
+    const novoAno = document.getElementById('input-novo-ano-modal').value.trim(); if (!novoAno || anosDisponiveis.includes(novoAno)) return alert("Ano inválido ou já existente no sistema.");
+    const opcao = document.querySelector('input[name="opcao_migracao"]:checked').value; let novosLideres = []; let novasPessoas = [];
+    if (opcao === 'lideres') { novosLideres = lideres.map(l => ({...l, valor: 0})); } else if (opcao === 'tudo') { novosLideres = lideres.map(l => ({...l})); novasPessoas = pessoas.map(p => ({...p})); }
+    anosDisponiveis.push(novoAno); anosDisponiveis.sort((a,b) => Number(b) - Number(a)); localStorage.setItem('anosDisponiveis', JSON.stringify(anosDisponiveis));
+    localStorage.setItem(`bd_lideres_${novoAno}`, JSON.stringify(novosLideres)); localStorage.setItem(`bd_pessoas_${novoAno}`, JSON.stringify(novasPessoas));
+    fecharModais(); mudarAno(novoAno); alert(`Ano ${novoAno} configurado e ativado com sucesso!`);
+  }
+
+  // ==========================================
+  // NAVEGAÇÃO E MÁSCARAS
+  // ==========================================
+  function switchTab(tabId, btnElement) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); document.getElementById(tabId).classList.add('active'); document.querySelectorAll('.drawer-item').forEach(btn => btn.classList.remove('active')); if(btnElement) btnElement.classList.add('active');
+    const menu = document.getElementById('drawer-menu'); if (menu.classList.contains('open')) toggleDrawer(); 
+    if(tabId === 'tab-relatorios') atualizarTelaRelatorios(); if(tabId === 'tab-cadastrar' || tabId === 'tab-importar') atualizarSelectsLideres(); if(tabId === 'tab-graficos') iniciarDashboard(); if(tabId === 'tab-banco') renderizarPessoas();
+  }
+  function fecharModais() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+  function formatarFoneAutomatico(v) { if (!v) return ''; let apenasNums = v.replace(/\D/g, ''); if (apenasNums.length > 0 && apenasNums.length <= 9 && !apenasNums.startsWith('81')) apenasNums = '81' + apenasNums; if (apenasNums.length > 11 && apenasNums.startsWith('55')) apenasNums = apenasNums.slice(2); return apenasNums.replace(/^(\d{2})(\d)/g, '($1) $2').replace(/(\d{4,5})(\d{4})$/, '$1-$2'); }
+  const mascaraCPF = v => v.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  document.getElementById('lider-contato').addEventListener('input', e => e.target.value = formatarFoneAutomatico(e.target.value)); document.getElementById('edit-lider-contato').addEventListener('input', e => e.target.value = formatarFoneAutomatico(e.target.value)); document.getElementById('conf-fone').addEventListener('input', e => e.target.value = formatarFoneAutomatico(e.target.value)); document.getElementById('cad-fone').addEventListener('input', e => e.target.value = formatarFoneAutomatico(e.target.value)); document.getElementById('edit-pessoa-fone').addEventListener('input', e => e.target.value = formatarFoneAutomatico(e.target.value)); ['cad-cpf','conf-cpf','edit-pessoa-cpf'].forEach(id => document.getElementById(id).addEventListener('input', e => e.target.value = mascaraCPF(e.target.value)));
+
+  // ==========================================
+  // DUPLICADOS E MESCLAGEM
+  // ==========================================
+  function obterDuplicadosDe(p1) {
+    let dups = []; let n1 = p1.nome ? p1.nome.trim().toUpperCase() : ''; let c1 = p1.cpf ? p1.cpf.replace(/\D/g, '') : ''; let t1 = p1.titulo ? p1.titulo.replace(/\D/g, '') : '';
+    pessoas.forEach(p2 => { if (p1.id === p2.id) return; let n2 = p2.nome ? p2.nome.trim().toUpperCase() : ''; let c2 = p2.cpf ? p2.cpf.replace(/\D/g, '') : ''; let t2 = p2.titulo ? p2.titulo.replace(/\D/g, '') : ''; if ((n1 && n1.length > 3 && n1 === n2) || (c1 && c1.length === 11 && c1 === c2) || (t1 && t1.length >= 8 && t1 === t2)) { dups.push(p2); } }); return dups;
+  }
+  function abrirModalMesclar(idFicha) {
+    let fichaPrincipal = pessoas.find(p => p.id === idFicha); let duplicados = obterDuplicadosDe(fichaPrincipal); grupoConflitoAtual = [fichaPrincipal, ...duplicados];
+    const divOpcoes = document.getElementById('mesclar-opcoes'); divOpcoes.innerHTML = '';
+    grupoConflitoAtual.forEach((p, index) => { let liderNome = p.lider_nome || 'SEM LÍDER'; let info = `CPF: ${p.cpf || 'Vazio'} | Tít: ${p.titulo || 'Vazio'} | Fone: ${p.fone || 'Vazio'}`; divOpcoes.innerHTML += `<label style="display:flex; align-items:flex-start; gap:10px; background:var(--bg); padding:10px; border:1px solid var(--border); border-radius:8px; cursor:pointer;"><input type="radio" name="radio_mesclar" value="${p.id}" ${index === 0 ? 'checked' : ''} style="margin-top:4px;"><div><strong style="color:var(--primary);">Manter cadastro: ${liderNome}</strong><br><span style="font-size:0.85rem; color:var(--text);">${p.nome}</span><br><small style="color:var(--text-muted);">${info}</small></div></label>`; }); document.getElementById('modal-mesclar').style.display = 'flex';
+  }
+  function confirmarMesclagem() {
+    let radioSelecionado = document.querySelector('input[name="radio_mesclar"]:checked'); if (!radioSelecionado) return alert("Selecione um cadastro para manter.");
+    let idParaManter = Number(radioSelecionado.value); let fichaMestre = grupoConflitoAtual.find(p => p.id === idParaManter); let idsParaRemover = grupoConflitoAtual.filter(p => p.id !== idParaManter).map(p => p.id);
+    grupoConflitoAtual.forEach(p => { if (p.id === idParaManter) return; ['fone','cpf','titulo','endereco','bairro','zona','secao'].forEach(c => { if(!fichaMestre[c] && p[c]) fichaMestre[c] = p[c]; }); });
+    pessoas = pessoas.filter(p => !idsParaRemover.includes(p.id)); let indexMestre = pessoas.findIndex(p => p.id === idParaManter); if(indexMestre !== -1) pessoas[indexMestre] = fichaMestre;
+    salvarDadosAno(); renderizarPessoas(document.getElementById('busca-banco').value); fecharModais(); alert('Cadastros mesclados com sucesso!');
+  }
+
+  function renderizarPessoas(filtro = "") {
+    salvarDadosAno(); let listaFiltrada = pessoas.slice().reverse(); if (filtro.trim() !== "") listaFiltrada = listaFiltrada.filter(p => p.nome.includes(filtro.toUpperCase()) || (p.cpf && p.cpf.includes(filtro)));
+    document.getElementById('total-registos').innerText = pessoas.length; const lista = document.getElementById('lista-pessoas'); lista.innerHTML = listaFiltrada.length ? '' : '<p style="color:var(--text-muted);font-size:0.9rem;">Nenhuma ficha encontrada.</p>';
+    listaFiltrada.forEach(p => {
+      let avisosHtml = ''; let numCpf = p.cpf ? p.cpf.replace(/\D/g, '') : ''; let numTit = p.titulo ? p.titulo.replace(/\D/g, '') : '';
+      if (numCpf.length > 0 && numCpf.length !== 11) avisosHtml += `<div class="alerta-formato">⚠ CPF em formato inválido</div>`; if (numTit.length > 0 && numTit.length !== 12) avisosHtml += `<div class="alerta-formato">⚠ Título em formato inválido</div>`;
+      let dups = obterDuplicadosDe(p); if (dups.length > 0) { let nomesLideres = Array.from(new Set(dups.map(d => d.lider_nome || 'SEM LÍDER'))).join(', '); avisosHtml += `<div class="alerta-duplicado-box"><span class="alerta-duplicado-text">⚠ Duplicidade com líder: ${nomesLideres}</span><button class="btn-mesclar" onclick="abrirModalMesclar(${p.id})">🔗 Mesclar</button></div>`; }
+      lista.innerHTML += `<div class="item-card"><div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><strong>${p.nome}</strong><br><span class="badge" style="margin-top:4px;">Líder: ${p.lider_nome || 'NENHUM'}</span></div><div class="actions-container"><button class="action-btn" onclick="abrirEditarPessoa(${p.id})">✏️</button><button class="action-btn" onclick="excluirPessoa(${p.id})">🗑️</button></div></div><div class="item-details">📱 ${p.fone} | 💳 CPF: ${p.cpf}<br>🏠 ${p.endereco} - ${p.bairro}<br>🗳️ Tít: ${p.titulo} | Z: ${p.zona} | S: ${p.secao}</div>${avisosHtml}</div>`;
+    });
+  }
+
+  // ==========================================
+  // LÍDERES E CADASTROS
+  // ==========================================
+  function atualizarSelectsLideres() {
+    const selIA_foto = document.getElementById('select-lider-ia-foto'); const selIA_texto = document.getElementById('select-lider-ia-texto'); const selCad = document.getElementById('cad-pessoa-lider');
+    const opts = lideres.length ? lideres.map(l => `<option value="${l.id}">${l.nome} (${l.local})</option>`).join('') : '<option value="">Nenhum responsável cadastrado</option>';
+    selIA_foto.innerHTML = '<option value="">Selecione um líder...</option>' + opts; selIA_texto.innerHTML = '<option value="">Selecione um líder...</option>' + opts; selCad.innerHTML = '<option value="">Selecione um líder...</option>' + opts;
+  }
+  function atualizarLideres() {
+    salvarDadosAno(); atualizarSelectsLideres(); const div = document.getElementById('lista-lideres'); div.innerHTML = lideres.length ? '' : '<p style="color:var(--text-muted);font-size:0.9rem;">Nenhum cadastrado.</p>';
+    lideres.forEach(l => {
+      let vFixo = Number(l.valor) || 0; let vPessoa = (l.valorPessoa !== undefined && l.valorPessoa !== '') ? Number(l.valorPessoa) : 50;
+      const valFmt = ` | Fixo: ${vFixo.toFixed(2).replace('.',',')} | Pág/Pess: ${vPessoa.toFixed(2).replace('.',',')}`;
+      div.innerHTML += `<div class="item-card"><div style="display:flex; justify-content:space-between; align-items:center;"><strong style="color:var(--primary);">${l.nome} - ${l.local} - ${l.contato}</strong><div class="actions-container"><button class="action-btn" onclick="abrirEditarLider(${l.id})">✏️</button><button class="action-btn" onclick="excluirLider(${l.id})">🗑️</button></div></div><div class="item-details">${valFmt}<br><small style="color:var(--warning);">${l.obs || ''}</small></div></div>`;
+    });
+  }
+  document.getElementById('form-lider').addEventListener('submit', (e) => {
+    e.preventDefault(); lideres.push({ id: Date.now(), nome: document.getElementById('lider-nome').value.trim().toUpperCase(), local: document.getElementById('lider-local').value.trim().toUpperCase(), contato: document.getElementById('lider-contato').value.trim(), valor: document.getElementById('lider-valor').value || 0, valorPessoa: document.getElementById('lider-valor-pessoa').value !== '' ? Number(document.getElementById('lider-valor-pessoa').value) : 50, obs: document.getElementById('lider-obs').value.trim().toUpperCase() });
+    atualizarLideres(); e.target.reset(); alert('Responsável cadastrado!');
+  });
+  document.getElementById('form-pessoa-manual').addEventListener('submit', (e) => {
+    e.preventDefault(); const lId = document.getElementById('cad-pessoa-lider').value; if(!lId) return alert('Selecione o responsável.'); const lid = lideres.find(l => l.id == lId);
+    pessoas.push({ id: Date.now(), lider_id: Number(lId), lider_nome: lid ? lid.nome : "SEM RESPONSÁVEL", nome: document.getElementById('cad-nome').value.trim().toUpperCase(), fone: document.getElementById('cad-fone').value, cpf: document.getElementById('cad-cpf').value.trim(), endereco: document.getElementById('cad-endereco').value.trim().toUpperCase(), bairro: document.getElementById('cad-bairro').value.trim().toUpperCase(), titulo: document.getElementById('cad-titulo').value.trim(), zona: document.getElementById('cad-zona').value.trim().toUpperCase(), secao: document.getElementById('cad-secao').value.trim().toUpperCase(), data_cadastro: new Date().toLocaleDateString('pt-BR') });
+    salvarDadosAno(); renderizarPessoas(); e.target.reset(); alert('Pessoa cadastrada com sucesso!'); switchTab('tab-banco');
+  });
+  function abrirEditarLider(id) {
+    const l = lideres.find(x => x.id === id); document.getElementById('edit-lider-id').value = l.id; document.getElementById('edit-lider-nome').value = l.nome; document.getElementById('edit-lider-local').value = l.local; document.getElementById('edit-lider-contato').value = l.contato; document.getElementById('edit-lider-valor').value = l.valor || ''; document.getElementById('edit-lider-valor-pessoa').value = (l.valorPessoa !== undefined) ? l.valorPessoa : 50; document.getElementById('edit-lider-obs').value = l.obs || ''; document.getElementById('modal-editar-lider').style.display = 'flex';
+  }
+  function salvarEdicaoLider() {
+    const id = Number(document.getElementById('edit-lider-id').value); const index = lideres.findIndex(x => x.id === id); const novoNome = document.getElementById('edit-lider-nome').value.trim().toUpperCase();
+    lideres[index].nome = novoNome; lideres[index].local = document.getElementById('edit-lider-local').value.trim().toUpperCase(); lideres[index].contato = document.getElementById('edit-lider-contato').value; lideres[index].valor = document.getElementById('edit-lider-valor').value || 0; lideres[index].valorPessoa = document.getElementById('edit-lider-valor-pessoa').value !== '' ? Number(document.getElementById('edit-lider-valor-pessoa').value) : 50; lideres[index].obs = document.getElementById('edit-lider-obs').value.trim().toUpperCase();
+    pessoas.forEach(p => { if (p.lider_id === id) p.lider_nome = novoNome; }); atualizarLideres(); renderizarPessoas(); fecharModais();
+  }
+  function excluirLider(id) { if(confirm('Excluir este responsável? As fichas ficarão Sem Responsável.')) { lideres = lideres.filter(x => x.id !== id); pessoas.forEach(p => { if(p.lider_id === id) { p.lider_id = null; p.lider_nome = "SEM RESPONSÁVEL"; }}); atualizarLideres(); renderizarPessoas(); } }
+  function abrirEditarPessoa(id) {
+    const p = pessoas.find(x => x.id === id); const selLider = document.getElementById('edit-pessoa-lider'); selLider.innerHTML = '<option value="">Sem Responsável</option>';
+    lideres.forEach(l => selLider.innerHTML += `<option value="${l.id}" ${p.lider_id == l.id ? 'selected' : ''}>${l.nome}</option>`);
+    ['id','nome','fone','cpf','endereco','bairro','titulo','zona','secao'].forEach(c => document.getElementById(`edit-pessoa-${c}`).value = p[c] || ''); document.getElementById('modal-editar-pessoa').style.display = 'flex';
+  }
+  function salvarEdicaoPessoa() {
+    const idAtual = Number(document.getElementById('edit-pessoa-id').value); const index = pessoas.findIndex(x => x.id === idAtual);
+    const novoLiderId = document.getElementById('edit-pessoa-lider').value; const lid = lideres.find(l => l.id == novoLiderId);
+    pessoas[index].lider_id = novoLiderId ? Number(novoLiderId) : null; pessoas[index].lider_nome = lid ? lid.nome : "SEM RESPONSÁVEL";
+    ['nome','fone','cpf','endereco','bairro','titulo','zona','secao'].forEach(c => pessoas[index][c] = document.getElementById(`edit-pessoa-${c}`).value.trim().toUpperCase());
+    salvarDadosAno(); renderizarPessoas(document.getElementById('busca-banco').value); fecharModais();
+  }
+  function excluirPessoa(id) { if(confirm('Apagar este cadastro?')) { pessoas = pessoas.filter(p => p.id !== id); salvarDadosAno(); renderizarPessoas(document.getElementById('busca-banco').value); } }
+
+  // IMPORTAÇÃO MANUAL JSON
+  document.getElementById('btn-iniciar-conferencia').addEventListener('click', () => {
+    const lid = document.getElementById('select-lider-ia-texto').value; const jsonStr = document.getElementById('json-input').value.trim();
+    if(!lid) return alert('Selecione o líder.'); if(!jsonStr) return alert('Cole o código gerado no chat.');
+    try { loteEmConferencia = JSON.parse(jsonStr); if(!Array.isArray(loteEmConferencia)) throw new Error(); } catch (e) { return alert('Erro no código. Copie exatamente o bloco JSON.'); }
+    liderAtivo = lideres.find(l => l.id == lid); indiceAtual = 0; abrirFichaModal(indiceAtual);
+  });
+  function abrirFichaModal(index) {
+    if(index >= loteEmConferencia.length) { fecharModais(); alert('Fichas salvas!'); switchTab('tab-banco'); return; }
+    const item = loteEmConferencia[index]; document.getElementById('modal-contador').innerText = `${index+1} de ${loteEmConferencia.length}`;
+    ['nome','fone','cpf','endereco','bairro','titulo','zona','secao'].forEach(c => document.getElementById(`conf-${c}`).value = item[c] || '');
+    document.getElementById('conf-fone').value = formatarFoneAutomatico(document.getElementById('conf-fone').value); document.getElementById('conf-cpf').value = mascaraCPF(document.getElementById('conf-cpf').value);
+    document.getElementById('modal-conferencia').style.display = 'flex';
+  }
+  document.getElementById('btn-aprovar-ficha').addEventListener('click', () => {
+    pessoas.push({ id: Date.now(), lider_id: liderAtivo.id, lider_nome: liderAtivo.nome, nome: document.getElementById('conf-nome').value.trim().toUpperCase(), fone: document.getElementById('conf-fone').value, cpf: document.getElementById('conf-cpf').value.trim(), endereco: document.getElementById('conf-endereco').value.trim().toUpperCase(), bairro: document.getElementById('conf-bairro').value.trim().toUpperCase(), titulo: document.getElementById('conf-titulo').value.trim(), zona: document.getElementById('conf-zona').value.trim().toUpperCase(), secao: document.getElementById('conf-secao').value.trim().toUpperCase(), data_cadastro: new Date().toLocaleDateString('pt-BR') });
+    salvarDadosAno(); renderizarPessoas(); indiceAtual++; abrirFichaModal(indiceAtual);
+  });
+  document.getElementById('btn-pular-ficha').addEventListener('click', () => { indiceAtual++; abrirFichaModal(indiceAtual); });
+
+  // ==========================================
+  // DASHBOARD
+  // ==========================================
+  let filtrosAtivos = new Set(); let configGrafico1 = 'pizza'; let configGrafico2 = 'qtd'; const paletaCores = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#84cc16', '#ef4444'];
+  function iniciarDashboard() { filtrosAtivos.clear(); lideres.forEach(l => filtrosAtivos.add(String(l.id))); filtrosAtivos.add('sem_lider'); renderizarFiltros(); atualizarVisualizacaoDash(); }
+  function renderizarFiltros() { const container = document.getElementById('chips-filtros'); container.innerHTML = ''; lideres.forEach(l => { let isAtivo = filtrosAtivos.has(String(l.id)); container.innerHTML += `<button class="chip ${isAtivo ? 'active' : ''}" onclick="toggleFiltro('${l.id}')">${l.nome}</button>`; }); let semAtivo = filtrosAtivos.has('sem_lider'); container.innerHTML += `<button class="chip ${semAtivo ? 'active' : ''}" onclick="toggleFiltro('sem_lider')">SEM LÍDER</button>`; }
+  function toggleFiltro(id) { if (filtrosAtivos.has(id)) filtrosAtivos.delete(id); else filtrosAtivos.add(id); renderizarFiltros(); atualizarVisualizacaoDash(); }
+  function setGrafico1(tipo) { configGrafico1 = tipo; document.getElementById('btn-tipo1-pizza').classList.toggle('active', tipo === 'pizza'); document.getElementById('btn-tipo1-barra').classList.toggle('active', tipo === 'barra'); atualizarVisualizacaoDash(); }
+  function setGrafico2(metrica) { configGrafico2 = metrica; document.getElementById('btn-tipo2-qtd').classList.toggle('active', metrica === 'qtd'); document.getElementById('btn-tipo2-val').classList.toggle('active', metrica === 'val'); atualizarVisualizacaoDash(); }
+  function atualizarVisualizacaoDash() {
+    const pessoasFiltradas = pessoas.filter(p => { if (!p.lider_id) return filtrosAtivos.has('sem_lider'); return filtrosAtivos.has(String(p.lider_id)); }); document.getElementById('stat-total-pessoas').innerText = pessoasFiltradas.length;
+    let totalOrcamentoFiltrado = 0; let dataset = []; 
+    lideres.forEach((l, idx) => {
+      if (filtrosAtivos.has(String(l.id))) {
+        let qtd = pessoas.filter(p => p.lider_id === l.id).length; let vPessoa = (l.valorPessoa !== undefined && l.valorPessoa !== '') ? Number(l.valorPessoa) : 50; let valCalc = (qtd * vPessoa) + (Number(l.valor) || 0); totalOrcamentoFiltrado += valCalc; if(qtd > 0 || valCalc > 0) dataset.push({ nome: l.nome, qtd, val: valCalc, cor: paletaCores[idx % paletaCores.length] });
+      }
+    });
+    if (filtrosAtivos.has('sem_lider')) { let qtdSem = pessoas.filter(p => !p.lider_id).length; if (qtdSem > 0) { totalOrcamentoFiltrado += (qtdSem * 50); dataset.push({ nome: 'SEM RESPONSÁVEL', qtd: qtdSem, val: qtdSem * 50, cor: '#64748b' }); } }
+    document.getElementById('stat-total-orcamento').innerText = `${totalOrcamentoFiltrado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`; renderGrafico1(dataset, pessoasFiltradas.length); renderGrafico2(dataset);
+  }
+  function renderGrafico1(dataset, totalFiltro) {
+    const container = document.getElementById('grafico-1-container'); container.innerHTML = ''; if (totalFiltro === 0 || dataset.length === 0) { container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; text-align:center; margin-top:20px;">Sem dados para exibir.</p>'; return; }
+    let legendHtml = '<div class="chart-legend" style="margin-top:14px; width:100%;">'; dataset.forEach(item => { let percentual = ((item.qtd / totalFiltro) * 100).toFixed(1); legendHtml += `<div class="legend-item"><div style="display:flex; align-items:center; gap:8px;"><div style="width:12px; height:12px; background:${item.cor}; border-radius:3px;"></div><span>${item.nome}</span></div><strong>${item.qtd} (${percentual}%)</strong></div>`; }); legendHtml += '</div>';
+    if (configGrafico1 === 'pizza') {
+      let svgHtml = `<div class="svg-donut-wrapper"><svg viewBox="0 0 42 42" class="donut-svg"><circle class="donut-circle-bg" cx="21" cy="21" r="15.9154943"></circle>`; let offset = 25; dataset.forEach((item, index) => { let perc = (item.qtd / totalFiltro) * 100; let dasharray = `${perc} ${100 - perc}`; svgHtml += `<circle class="donut-segment" cx="21" cy="21" r="15.9154943" stroke="${item.cor}" stroke-dasharray="${dasharray}" stroke-dashoffset="${offset}"></circle>`; offset -= perc; }); svgHtml += `</svg><div class="donut-center-text"><span>${totalFiltro}</span><small>Fichas</small></div></div>`; container.innerHTML = svgHtml + legendHtml;
+      setTimeout(() => { document.querySelectorAll('.donut-segment').forEach(el => { let origArray = el.getAttribute('stroke-dasharray'); el.setAttribute('stroke-dasharray', '0 100'); setTimeout(() => el.setAttribute('stroke-dasharray', origArray), 50); }); }, 10);
+    } else { let stackedHtml = '<div class="stacked-bar-container">'; dataset.forEach(item => { let perc = (item.qtd / totalFiltro) * 100; if(perc > 0) stackedHtml += `<div class="stacked-segment" style="width: ${perc}%; background: ${item.cor};" title="${item.nome}: ${perc.toFixed(1)}%">${perc >= 5 ? perc.toFixed(0)+'%' : ''}</div>`; }); stackedHtml += '</div>'; container.innerHTML = stackedHtml + legendHtml; }
+  }
+  function renderGrafico2(dataset) {
+    const container = document.getElementById('grafico-2-container'); container.innerHTML = ''; if (dataset.length === 0) { container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; text-align:center;">Sem dados para exibir.</p>'; return; }
+    let maxValue = Math.max(...dataset.map(d => configGrafico2 === 'qtd' ? d.qtd : d.val), 1); let dataOrdenada = [...dataset].sort((a, b) => configGrafico2 === 'qtd' ? b.qtd - a.qtd : b.val - a.val);
+    dataOrdenada.forEach(item => {
+      let valorAtual = configGrafico2 === 'qtd' ? item.qtd : item.val; let labelValor = configGrafico2 === 'qtd' ? `${item.qtd} fichas` : `${item.val.toLocaleString('pt-BR', {minimumFractionDigits:2})}`; let corTexto = configGrafico2 === 'qtd' ? 'var(--primary)' : 'var(--success)'; let corFundo = configGrafico2 === 'qtd' ? item.cor : 'var(--success)';
+      let porcentagemBarra = Math.round((valorAtual / maxValue) * 100); if (porcentagemBarra < 5 && valorAtual > 0) porcentagemBarra = 5;
+      container.innerHTML += `<div class="premium-bar-wrap"><div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:600;"><span style="color:var(--text);">${item.nome}</span><span style="color:${corTexto};">${labelValor}</span></div><div class="premium-bar-bg"><div class="premium-bar-fill" style="--w: ${porcentagemBarra}%; background: linear-gradient(90deg, ${corFundo}, ${corFundo}dd);"></div></div></div>`;
+    });
+  }
+
+  // ==========================================
+  // RELATÓRIOS (IMPRESSÃO A4)
+  // ==========================================
+  function atualizarTelaRelatorios() {
+    const divCheck = document.getElementById('lista-lideres-imprimir'); divCheck.innerHTML = `<label class="lider-checkbox-item" style="font-weight:bold; color:var(--primary);"><input type="checkbox" id="check-todos" checked onchange="marcarTodos(this.checked)"> MARCAR TODOS</label>`;
+    lideres.forEach(l => divCheck.innerHTML += `<label class="lider-checkbox-item"><input type="checkbox" class="chk-lider" value="${l.id}" checked> ${l.nome} - ${l.local}</label>`);
+  }
+  function marcarTodos(status) { document.querySelectorAll('.chk-lider').forEach(cb => cb.checked = status); }
+
+  function imprimirRelatorio() {
+    const tipo = document.getElementById('tipo-relatorio').value;
+    const selecionados = Array.from(document.querySelectorAll('.chk-lider:checked')).map(cb => Number(cb.value));
+    if(selecionados.length === 0) return alert('Selecione pelo menos um líder para imprimir.');
+    
+    const lideresFiltro = lideres.filter(l => selecionados.includes(l.id));
+    let dataHoje = new Date().toLocaleDateString('pt-BR');
+
+    let tituloRelatorio = ""; let subtitulo = ""; let conteudoHTML = "";
+
+    if (tipo === 'valores') {
+      tituloRelatorio = "Lista de Valores por Líder"; subtitulo = "Cálculo financeiro baseado nas fichas e valores definidos.";
+      conteudoHTML = `<table class="data-table"><thead><tr><th>LÍDER</th><th></th><th style="text-align:right;">TOTAL</th></tr></thead><tbody>`;
+      let totalGeral = 0;
+      
+      let dadosValores = lideresFiltro.map(l => {
+        let qtd = pessoas.filter(p => p.lider_id === l.id).length; let vPessoa = (l.valorPessoa !== undefined && l.valorPessoa !== '') ? Number(l.valorPessoa) : 50;
+        let valorPessoas = qtd * vPessoa; let valorFixo = Number(l.valor) || 0; let totalLider = valorPessoas + valorFixo;
+        return { l, qtd, vPessoa, valorFixo, totalLider };
+      }).sort((a, b) => b.totalLider - a.totalLider);
+
+      dadosValores.forEach((d, index) => {
+        totalGeral += d.totalLider;
+        let calculoStr = `${d.valorFixo} + ${d.qtd} Pessoas x ${d.vPessoa}`;
+        let bgClass = index % 2 !== 0 ? 'bg-cinza' : '';
+        let obsHtml = d.l.obs ? `<div style="font-size:11px; color:#888; font-weight:normal; margin-top:4px;">${d.l.obs}</div>` : '';
+        
+        conteudoHTML += `<tr class="avoid-break ${bgClass}">
+          <td style="padding:10px;"><strong style="font-size:13px;">${d.l.nome} - ${d.l.local} - ${d.l.contato}</strong>${obsHtml}</td>
+          <td style="padding:10px; vertical-align:middle; font-size:12px; color:#555;">${calculoStr}</td>
+          <td style="text-align:right; font-weight:bold; vertical-align:middle; padding:10px; font-size:13px;">${d.totalLider.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+        </tr>`;
+      });
+      conteudoHTML += `</tbody><tfoot><tr><td colspan="2" style="text-align:right; font-weight:bold; font-size:14px; padding-top:12px;">TOTAL GERAL:</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:12px;">${totalGeral.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr></tfoot></table>`;
+    } 
+    else if (tipo === 'resumo') {
+      tituloRelatorio = "Resumo Geral de Fichas"; subtitulo = "Quantidade de cadastros associados a cada líder.";
+      conteudoHTML = `<table class="data-table"><thead><tr><th>LÍDER</th><th style="text-align:center;">QTD DE FICHAS</th></tr></thead><tbody>`;
+      let totalFichas = 0;
+      
+      let dadosQtd = lideresFiltro.map(l => {
+        let qtd = pessoas.filter(p => p.lider_id === l.id).length;
+        return { l, qtd };
+      }).sort((a, b) => b.qtd - a.qtd);
+
+      dadosQtd.forEach((d, index) => {
+        totalFichas += d.qtd;
+        let bgClass = index % 2 !== 0 ? 'bg-cinza' : '';
+        let obsHtml = d.l.obs ? `<div style="font-size:11px; color:#888; font-weight:normal; margin-top:4px;">${d.l.obs}</div>` : '';
+        
+        conteudoHTML += `<tr class="avoid-break ${bgClass}">
+          <td style="padding:10px;"><strong style="font-size:13px;">${d.l.nome} - ${d.l.local} - ${d.l.contato}</strong>${obsHtml}</td>
+          <td style="text-align:center; font-weight:bold; font-size:14px; vertical-align:middle; padding:10px;">${d.qtd}</td>
+        </tr>`;
+      });
+      conteudoHTML += `</tbody><tfoot><tr><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:12px;">TOTAL GERAL:</td><td style="text-align:center; font-weight:bold; font-size:14px; padding-top:12px;">${totalFichas}</td></tr></tfoot></table>`;
+    } 
+    else if (tipo === 'cadastros') {
+      tituloRelatorio = "Lista Completa de Cadastros"; subtitulo = "Relação detalhada de cadastros organizados por liderança.";
+      let totalPessoasGeral = 0;
+      
+      let dadosQtd = lideresFiltro.map(l => {
+        let listaPessoas = pessoas.filter(p => p.lider_id === l.id);
+        return { l, listaPessoas, qtd: listaPessoas.length };
+      }).sort((a, b) => b.qtd - a.qtd);
+
+      dadosQtd.forEach((d, index) => {
+        totalPessoasGeral += d.qtd;
+        let quebraDePagina = index > 0 ? "page-break" : "";
+        conteudoHTML += `<div class="lider-section ${quebraDePagina}">
+          <div class="lider-header avoid-break">LÍDER: ${d.l.nome} - ${d.l.local} - ${d.l.contato} (Total: ${d.qtd} Fichas)</div>`;
+        if(d.qtd === 0) {
+          conteudoHTML += `<div class="pessoa-item bg-cinza avoid-break"><div class="pessoa-dados"><div class="pessoa-linha" style="color:#777; font-style:italic;">Nenhum cadastro vinculado a este líder.</div></div></div>`;
+        } else {
+          d.listaPessoas.forEach((p, i) => {
+            let bgClass = i % 2 !== 0 ? 'bg-cinza' : '';
+            conteudoHTML += `
+            <div class="pessoa-item avoid-break ${bgClass}">
+              <div class="pessoa-num">${i+1}.</div>
+              <div class="pessoa-dados">
+                <div><strong>NOME:</strong> ${p.nome || '---'}</div>
+                <div><strong>FONE:</strong> ${p.fone || '---'}</div>
+                <div class="pessoa-linha"><strong>ENDEREÇO:</strong> ${p.endereco || '---'} — <strong>BAIRRO:</strong> ${p.bairro || '---'}</div>
+                <div><strong>TÍTULO:</strong> ${p.titulo || '---'}</div>
+                <div><strong>ZONA/SEÇÃO:</strong> ${p.zona || '--'} / ${p.secao || '--'} &nbsp; | &nbsp; <strong>CPF:</strong> ${p.cpf || '---'}</div>
+              </div>
+            </div>`;
+          });
+        }
+        conteudoHTML += `</div>`;
+      });
+      conteudoHTML += `<div class="avoid-break" style="margin-top:20px; text-align:right; font-size:16px; border-top:2px solid #000; padding-top:10px;"><strong>TOTAL GERAL IMPRESSO: ${totalPessoasGeral} FICHAS</strong></div>`;
+    }
+
+    let html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório - ${anoAtual}</title>
+    <style>
+      body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #111; font-size: 12px; margin: 0; background: #fff; }
+      @page { size: A4; margin: 15mm 15mm 20mm 15mm; }
+      @media print {
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .page-break { page-break-before: always; break-before: always; }
+        .avoid-break { page-break-inside: avoid; break-inside: avoid; }
+        .print-warning { display: none !important; }
+      }
+      table.report-wrapper { width: 100%; border-collapse: collapse; }
+      table.report-wrapper > tbody > tr > td { padding: 0; }
+      .header-main { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+      .footer-main { text-align: center; font-size: 10px; color: #555; padding-top: 10px; border-top: 1px solid #ccc; margin-top: 20px;}
+      table.data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+      table.data-table th, table.data-table td { border-bottom: 1px solid #ddd; text-align: left; vertical-align: top; }
+      table.data-table th { background-color: #e2e8f0 !important; font-weight: bold; border-bottom: 2px solid #94a3b8; padding: 10px; }
+      .bg-cinza { background-color: #f1f5f9 !important; }
+      .lider-section { margin-top: 20px; }
+      .lider-header { background-color: #e2e8f0 !important; padding: 10px; border: 1px solid #cbd5e1; font-weight: bold; font-size: 14px; margin-bottom: 8px; border-radius: 4px; }
+      .pessoa-item { display: flex; border-bottom: 1px solid #e2e8f0; padding: 10px; border-radius: 4px; margin-bottom: 4px; }
+      .pessoa-num { width: 35px; font-weight: bold; color: #64748b; font-size: 14px; }
+      .pessoa-dados { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11.5px; }
+      .pessoa-linha { grid-column: span 2; }
+      .print-warning { background-color: #fffbeb; color: #d97706; padding: 8px; font-size: 11px; font-weight: bold; border: 1px dashed #d97706; border-radius: 4px; margin-top: 6px; }
+    </style>
+    </head><body>
+      <table class="report-wrapper">
+        <thead>
+          <tr>
+            <td>
+              <div class="header-main">
+                <h2 style="margin:0;font-size:20px;text-transform:uppercase;">${tituloRelatorio} - ${anoAtual}</h2>
+                <p style="margin:5px 0 0;font-size:12px;color:#444;">${subtitulo}</p>
+              </div>
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              ${conteudoHTML}
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>
+              <div class="footer-main">
+                Sistema de Gestão de Fichas v${VERSAO_ATUAL} — Gerado em: ${dataHoje}<br>
+                <div class="print-warning">* Para imprimir os números de página (Ex: Pág 1 de 3), ative a opção "Cabeçalhos e rodapés" nas configurações de impressão do navegador. (Este aviso desaparecerá no papel).</div>
+              </div>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </body></html>`;
+    
+    const win = window.open('', '_blank'); win.document.write(html); win.document.close(); setTimeout(() => { win.print(); }, 500);
+  }
+
+  // ==========================================
+  // EXPORTAÇÃO E BACKUP
+  // ==========================================
+  document.getElementById('btn-exportar-csv').addEventListener('click', () => {
+    if(!pessoas.length) return alert('Banco vazio.'); let csv = '\uFEFFLíder;Nome;Telefone;Endereço;Bairro;CPF;Título;Zona;Seção;Data\n';
+    pessoas.forEach(p => csv += `"${p.lider_nome}";"${p.nome}";"${p.fone}";"${p.endereco}";"${p.bairro}";"${p.cpf}";"${p.titulo}";"${p.zona}";"${p.secao}";"${p.data_cadastro}"\n`);
+    const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8;'})); link.download = `fichas_${anoAtual}_${new Date().toISOString().slice(0,10)}.csv`; link.click();
+  });
+
+  function exportarBackupJSON() {
+    let backupData = { versao: VERSAO_ATUAL, tema: localStorage.getItem('temaPref') || 'azul', anosDisponiveis, dadosPorAno: {} };
+    anosDisponiveis.forEach(a => { backupData.dadosPorAno[a] = { lideres: JSON.parse(localStorage.getItem('bd_lideres_'+a) || '[]'), pessoas: JSON.parse(localStorage.getItem('bd_pessoas_'+a) || '[]') }; });
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], {type: 'application/json'}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob);
+    link.download = `backup_sistema_fichas_COMPLETO_v${VERSAO_ATUAL}_${new Date().toISOString().slice(0,10)}.json`; link.click();
+  }
+
+  function importarBackupJSON(event) {
+    const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const dados = JSON.parse(e.target.result);
+        if (dados.anosDisponiveis && dados.dadosPorAno) {
+          if(confirm(`Restaurar backup com ${dados.anosDisponiveis.length} anos? Isto vai substituir TODO o sistema.`)) {
+            anosDisponiveis = dados.anosDisponiveis; localStorage.setItem('anosDisponiveis', JSON.stringify(anosDisponiveis));
+            anosDisponiveis.forEach(a => { localStorage.setItem('bd_lideres_'+a, JSON.stringify(dados.dadosPorAno[a].lideres)); localStorage.setItem('bd_pessoas_'+a, JSON.stringify(dados.dadosPorAno[a].pessoas)); });
+            if (dados.tema) { localStorage.setItem('temaPref', dados.tema); document.documentElement.setAttribute('data-theme', dados.tema); }
+            mudarAno(anosDisponiveis.includes(anoAtual) ? anoAtual : anosDisponiveis[0]); alert('Backup completo restaurado com sucesso!');
+          }
+        }
+      } catch (err) { alert('Erro ao ler o ficheiro JSON.'); }
+    }; reader.readAsText(file);
+  }
+
+  function apagarAnoAtual() {
+    const s = document.getElementById('senha-apagar').value.trim().toLowerCase(); if(s !== 'wini') return alert('Senha incorreta!');
+    if(confirm(`Tem certeza ABSOLUTA? Isto vai apagar os líderes e pessoas apenas do ano ${anoAtual}.`)) { 
+      lideres = []; pessoas = []; salvarDadosAno(); atualizarLideres(); renderizarPessoas(); document.getElementById('senha-apagar').value = ''; alert(`Banco de ${anoAtual} zerado!`); 
+    }
+  }
+
+  // INICIALIZAÇÃO
+  carregarDadosAno(); atualizarLideres(); renderizarPessoas();
+</script>
+</body>
+</html>
