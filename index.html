@@ -5,15 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema de Gestão de Fichas</title>
   <style>
-    :root {
-      --primary: #1e40af; --bg: #f1f5f9; --card: #ffffff; --border: #cbd5e1; 
-      --text: #0f172a; --text-muted: #64748b; --success: #15803d; 
-      --danger: #dc2626; --warning: #d97706;
-    }
+    :root { --primary: #1e40af; --bg: #f1f5f9; --card: #ffffff; --border: #cbd5e1; --text: #0f172a; --text-muted: #64748b; --success: #15803d; --danger: #dc2626; --warning: #d97706; }
     [data-theme="verde"] { --primary: #065f46; --bg: #f0fdf4; --border: #bbf7d0; --text: #064e3b; }
     [data-theme="roxo"] { --primary: #6b21a8; --bg: #faf5ff; --border: #e9d5ff; --text: #3b0764; }
     [data-theme="dark"] { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f8fafc; }
-    
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding-bottom: 30px; transition: 0.3s; }
     
@@ -152,7 +147,7 @@
           <div class="field"><label>CPF:</label><input type="text" id="cad-cpf" style="text-transform: none;"></div>
           <div class="field"><label>Endereço:</label><input type="text" id="cad-endereco"></div>
           <div class="field"><label>Bairro:</label><input type="text" id="cad-bairro"></div>
-          <div class="field"><label>Título de Eleitor:</label><input type="text" id="cad-titulo" style="text-transform: none;"></div>
+          <div class="field"><label>Título:</label><input type="text" id="cad-titulo" style="text-transform: none;"></div>
           <div style="display:flex;gap:10px;">
             <div class="field" style="flex:1"><label>Zona:</label><input type="text" id="cad-zona" style="text-transform: none;"></div>
             <div class="field" style="flex:1"><label>Seção:</label><input type="text" id="cad-secao" style="text-transform: none;"></div>
@@ -162,26 +157,23 @@
       </div>
     </div>
 
-    <!-- Importar IA -->
+    <!-- Importar IA & Chat -->
     <div id="tab-importar" class="tab-content">
       <div class="card" style="border: 1px solid var(--primary);">
-        <h2>🤖 Leitura por IA (Híbrida)</h2>
-        <div class="field" style="margin-bottom: 12px;">
-          <label>Escolha o Motor de Inteligência:</label>
-          <select id="select-ia-motor" style="text-transform: none; font-weight: bold; color: var(--primary);">
-            <option value="groq">⚡ Groq (Llama 3.2 Vision) - Mais Rápido</option>
-            <option value="gemini">🌐 Google Gemini</option>
-          </select>
-        </div>
+        <h2>🤖 Opção 1: Leitura IA (Híbrida)</h2>
+        <div class="field" style="margin-bottom: 12px;"><label>Motor de IA:</label><select id="select-ia-motor" style="text-transform:none; font-weight:bold; color:var(--primary);"><option value="groq">⚡ Groq (Llama 3.2 Vision)</option><option value="gemini">🌐 Google Gemini</option></select></div>
         <div class="field" style="margin-bottom: 12px;"><label>Vincular a qual Líder?</label><select id="select-lider-ia-foto" required></select></div>
         <div class="field" style="margin-bottom: 12px;"><label>Foto da Ficha:</label><input type="file" id="input-foto-ficha" accept="image/*" capture="environment" style="text-transform: none; padding: 8px;"></div>
         <button type="button" id="btn-processar-foto" class="btn primary" onclick="processarImagemIA()">📷 Processar Ficha</button>
       </div>
-      <div class="card">
-        <h2>💬 Importar via Chat (JSON)</h2>
+      
+      <div class="card" style="border: 1px solid var(--success);">
+        <h2>💬 Opção 2: Importação Rápida via Chat (Recomendado)</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Se a rede móvel bloquear a IA direta, copie o prompt, envie a foto aqui no chat e cole o JSON gerado abaixo:</p>
+        <button type="button" class="btn sec" style="margin-bottom: 14px; background: #047857;" onclick="copiarPromptChat()">📋 Copiar Prompt para o Chat</button>
         <div class="field" style="margin-bottom: 12px;"><label>Vincular a qual Líder?</label><select id="select-lider-ia-texto" required></select></div>
-        <div class="field" style="margin-bottom: 16px;"><label>Cole o Código (JSON):</label><textarea id="json-input" rows="4" style="text-transform: none;"></textarea></div>
-        <button type="button" id="btn-iniciar-conferencia" class="btn success" onclick="iniciarImportacaoJSON()">✔ Importar Texto</button>
+        <div class="field" style="margin-bottom: 16px;"><label>Cole o Código (JSON):</label><textarea id="json-input" rows="4" style="text-transform: none;" placeholder='[{"nome": "...", "fone": "..."}]'></textarea></div>
+        <button type="button" id="btn-iniciar-conferencia" class="btn success" onclick="iniciarImportacaoJSON()">✔ Importar Texto com Segurança</button>
       </div>
     </div>
 
@@ -263,23 +255,23 @@
   </div>
 </div> 
 
-<!-- Modais Fixos -->
+<!-- Modais -->
 <div class="modal-overlay" id="modal-changelog"><div class="modal-box"><h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">📜 Versões</h3><div id="changelog-content" style="display:flex; flex-direction:column; max-height:50vh; overflow-y:auto; padding-right:10px; margin-top:10px;"></div><div class="btn-group" style="margin-top: 16px;"><button class="btn sec" onclick="fecharModais()">Fechar</button></div></div></div>
 
 <div class="modal-overlay" id="modal-novo-ano"><div class="modal-box"><h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">📅 Novo Ano</h3><div class="field"><label>Digite o Novo Ano:</label><input type="number" id="input-novo-ano-modal" style="text-transform: none;" placeholder="Ex: 2028"></div><div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;"><label style="display:flex; gap:10px; background:var(--bg); padding:12px; border-radius:8px; cursor:pointer;"><input type="radio" name="opcao_migracao" value="lideres" checked><div><strong>1. Trazer apenas Líderes</strong></div></label><label style="display:flex; gap:10px; background:var(--bg); padding:12px; border-radius:8px; cursor:pointer;"><input type="radio" name="opcao_migracao" value="tudo"><div><strong>2. Clonar Tudo</strong></div></label><label style="display:flex; gap:10px; background:var(--bg); padding:12px; border-radius:8px; cursor:pointer;"><input type="radio" name="opcao_migracao" value="zero"><div><strong>3. Começar do Zero</strong></div></label></div><div class="btn-group" style="margin-top: 16px;"><button class="btn success" onclick="confirmarNovoAno()">Criar</button><button class="btn sec" onclick="fecharModais()">Cancelar</button></div></div></div>
 
 <div class="modal-overlay" id="modal-mesclar"><div class="modal-box"><h3 style="color:var(--danger);border-bottom:1px solid var(--border);padding-bottom:10px;">🔗 Mesclar Conflitos</h3><div id="mesclar-opcoes" style="display:flex; flex-direction:column; gap:10px; max-height:40vh; overflow-y:auto; padding:4px;"></div><div class="btn-group" style="margin-top: 16px;"><button class="btn success" onclick="confirmarMesclagem()">Confirmar Mesclagem</button><button class="btn sec" onclick="fecharModais()">Cancelar</button></div></div></div>
 
-<div class="modal-overlay" id="modal-conferencia"><div class="modal-box"><h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">Conferir (<span id="modal-contador"></span>)</h3><div class="grid"><div class="field"><label>Nome:</label><input type="text" id="conf-nome"></div><div class="field"><label>Fone:</label><input type="text" id="conf-fone" style="text-transform: none;"></div><div class="field"><label>CPF:</label><input type="text" id="conf-cpf" style="text-transform: none;"></div><div class="field"><label>Endereço:</label><input type="text" id="conf-endereco"></div><div class="field"><label>Bairro:</label><input type="text" id="conf-bairro"></div><div class="field"><label>Título:</label><input type="text" id="conf-titulo" style="text-transform: none;"></div><div style="display:flex;gap:10px;"><div class="field" style="flex:1"><label>Zona:</label><input type="text" id="conf-zona" style="text-transform: none;"></div><div class="field" style="flex:1"><label>Seção:</label><input type="text" id="conf-secao" style="text-transform: none;"></div></div></div><div class="btn-group"><button class="btn success" onclick="aprovarFichaIa()">Salvar</button><button class="btn sec" onclick="pularFichaIa()">Pular</button></div></div></div>
+<div class="modal-overlay" id="modal-conferencia"><div class="modal-box"><h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">Conferir (<span id="modal-contador"></span>)</h3><div class="grid"><div class="field"><label>Nome:</label><input type="text" id="conf-nome"></div><div class="field"><label>Fone:</label><input type="text" id="conf-fone" style="text-transform: none;"></div><div class="field"><label>CPF:</label><input type="text" id="conf-cpf" style="text-transform: none;"></div><div class="field"><label>Endereço:</label><input type="text" id="conf-endereco"></div><div class="field"><label>Bairro:</label><input type="text" id="conf-bairro"></div><div class="field"><label>Título:</label><input type="text" id="conf-titulo" style="text-transform: none;"></div><div style="display:flex;gap:10px;"><div class="field" style="flex:1"><label>Zona:</label><input type="text" id="conf-zona" style="text-transform: none;"></div><div class="field" style="flex:1"><label>Seção:</label><input type="text" id="conf-secao" style="text-transform: none;"></div></div></div><div class="btn-group"><button class="btn success" onclick="aprovarFichaIa()" style="flex:2;">Salvar</button><button class="btn sec" onclick="pularFichaIa()" style="flex:1;">Pular</button></div></div></div>
 
-<div class="modal-overlay" id="modal-editar-pessoa"><div class="modal-box"><h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">Editar Pessoa</h3><input type="hidden" id="edit-pessoa-id"><div class="grid"><div class="field"><label>Líder:</label><select id="edit-pessoa-lider"></select></div><div class="field"><label>Nome:</label><input type="text" id="edit-pessoa-nome"></div><div class="field"><label>Fone:</label><input type="text" id="edit-pessoa-fone" style="text-transform: none;"></div><div class="field"><label>CPF:</label><input type="text" id="edit-pessoa-cpf" style="text-transform: none;"></div><div class="field"><label>Endereço:</label><input type="text" id="edit-pessoa-endereco"></div><div class="field"><label>Bairro:</label><input type="text" id="edit-pessoa-bairro"></div><div class="field"><label>Título:</label><input type="text" id="edit-pessoa-titulo" style="text-transform: none;"></div><div style="display:flex;gap:10px;"><div class="field" style="flex:1"><label>Zona:</label><input type="text" id="edit-pessoa-zona" style="text-transform: none;"></div><div class="field" style="flex:1"><label>Seção:</label><input type="text" id="edit-pessoa-secao" style="text-transform: none;"></div></div></div><div class="btn-group"><button class="btn success" onclick="salvarEdicaoPessoa()">Salvar</button><button class="btn sec" onclick="fecharModais()">Cancelar</button></div></div></div>
+<div class="modal-overlay" id="modal-editar-pessoa"><div class="modal-box"><h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">Editar Pessoa</h3><input type="hidden" id="edit-pessoa-id"><div class="grid"><div class="field"><label>Líder:</label><select id="edit-pessoa-lider"></select></div><div class="field"><label>Nome:</label><input type="text" id="edit-pessoa-nome"></div><div class="field"><label>Fone:</label><input type="text" id="edit-pessoa-fone" style="text-transform: none;"></div><div class="field"><label>CPF:</label><input type="text" id="edit-pessoa-cpf" style="text-transform: none;"></div><div class="field"><label>Endereço:</label><input type="text" id="edit-pessoa-endereco"></div><div class="field"><label>Bairro:</label><input type="text" id="edit-pessoa-bairro"></div><div class="field"><label>Título:</label><input type="text" id="edit-pessoa-titulo" style="text-transform: none;"></div><div style="display:flex;gap:10px;"><div class="field" style="flex:1"><label>Zona:</label><input type="text" id="edit-pessoa-zona" style="text-transform: none;"></div><div class="field" style="flex:1"><label>Seção:</label><input type="text" id="edit-pessoa-secao" style="text-transform: none;"></div></div></div><div class="btn-group"><button class="btn success" onclick="salvarEdicaoPessoa()" style="flex:2;">Salvar</button><button class="btn sec" onclick="fecharModais()" style="flex:1;">Cancelar</button></div></div></div>
 
-<div class="modal-overlay" id="modal-editar-lider"><div class="modal-box"><h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">Editar Líder</h3><input type="hidden" id="edit-lider-id"><div class="grid"><div class="field"><label>Nome:</label><input type="text" id="edit-lider-nome"></div><div class="field"><label>Local:</label><input type="text" id="edit-lider-local"></div><div class="field"><label>Contato:</label><input type="text" id="edit-lider-contato" style="text-transform: none;"></div><div style="display:flex;gap:10px;"><div class="field" style="flex:1"><label>Valor Fixo:</label><input type="number" step="0.01" id="edit-lider-valor" style="text-transform: none;"></div><div class="field" style="flex:1"><label>Valor por Pessoa:</label><input type="number" step="0.01" id="edit-lider-valor-pessoa" style="text-transform: none;"></div></div><div class="field"><label>Observação:</label><input type="text" id="edit-lider-obs"></div></div><div class="btn-group"><button class="btn success" onclick="salvarEdicaoLider()">Salvar</button><button class="btn sec" onclick="fecharModais()">Cancelar</button></div></div></div>
+<div class="modal-overlay" id="modal-editar-lider"><div class="modal-box"><h3 style="color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:10px;">Editar Responsável</h3><input type="hidden" id="edit-lider-id"><div class="grid"><div class="field"><label>Nome:</label><input type="text" id="edit-lider-nome"></div><div class="field"><label>Local:</label><input type="text" id="edit-lider-local"></div><div class="field"><label>Contato:</label><input type="text" id="edit-lider-contato" style="text-transform: none;"></div><div style="display:flex;gap:10px;"><div class="field" style="flex:1"><label>Valor Fixo:</label><input type="number" step="0.01" id="edit-lider-valor" style="text-transform: none;"></div><div class="field" style="flex:1"><label>Valor por Pessoa:</label><input type="number" step="0.01" id="edit-lider-valor-pessoa" style="text-transform: none;"></div></div><div class="field"><label>Observação:</label><input type="text" id="edit-lider-obs"></div></div><div class="btn-group"><button class="btn success" onclick="salvarEdicaoLider()" style="flex:2;">Salvar</button><button class="btn sec" onclick="fecharModais()" style="flex:1;">Cancelar</button></div></div></div>
 
 <script>
   window.onerror = function(m, u, l) { alert("ERRO DE CÓDIGO:\n" + m + "\nLinha: " + l); };
   
-  const VERSAO_ATUAL = "3.7.0";
+  const VERSAO_ATUAL = "3.9.0";
   const headerVersion = document.getElementById('header-version');
   if (headerVersion) headerVersion.innerText = "v" + VERSAO_ATUAL;
   const footerVersion = document.getElementById('footer-v-num');
@@ -312,8 +304,17 @@
   checkAuth();
 
   function abrirChangelog() {
-    document.getElementById('changelog-content').innerHTML = '<div class="changelog-item"><div class="cl-versao">v3.7.0 <span class="cl-data">Atual</span></div><div class="cl-desc">Sistema Híbrido de IA (Llama 3 Vision via Groq + Google Gemini) para evitar bloqueios de chave. Formatação compacta e blindada contra falhas de cópia.</div></div>';
+    document.getElementById('changelog-content').innerHTML = '<div class="changelog-item"><div class="cl-versao">v3.9.0 <span class="cl-data">Atual</span></div><div class="cl-desc">Adicionado botão de copiar prompt rápido para o chat, facilitando a importação segura via texto sempre que a rede móvel bloquear a IA direta.</div></div>';
     document.getElementById('modal-changelog').style.display = 'flex';
+  }
+
+  function copiarPromptChat() {
+    let p = "Extraia os dados desta ficha de cadastro para um array JSON contendo um único objeto com as chaves exatas (tudo minúsculo): 'nome', 'fone', 'cpf', 'endereco', 'bairro', 'titulo', 'zona', 'secao'. Deixe o valor vazio ('') se não encontrar. Não use markdown (```json), devolva apenas o array JSON puro.";
+    navigator.clipboard.writeText(p).then(() => {
+      alert("📋 Prompt copiado com sucesso!\n\nAgora cole este prompt aqui no chat junto com a foto da ficha para eu gerar o JSON para si.");
+    }).catch(err => {
+      alert("Não foi possível copiar automaticamente. Selecione e copie manualmente:\n\n" + p);
+    });
   }
 
   if(localStorage.getItem('bd_lideres') && !localStorage.getItem('bd_lideres_2026')) {
@@ -410,14 +411,14 @@
     
     if(qKey) {
         try {
-            let res = await fetch("https://api.groq.com/openai/v1/models", { headers: {"Authorization": "Bearer " + qKey} });
+            let res = await fetch("[https://api.groq.com/openai/v1/models](https://api.groq.com/openai/v1/models)", { headers: {"Authorization": "Bearer " + qKey} });
             if(res.ok) logs += "✅ Groq: Conectado com Sucesso!\n"; else logs += "❌ Groq: Chave inválida.\n";
         } catch(e) { logs += "❌ Groq: Falha de Rede.\n"; }
     }
     
     if(gKey) {
         try {
-            let res = await fetch("https://generativelanguage.googleapis.com/v1beta/models?key=" + gKey);
+            let res = await fetch("[https://generativelanguage.googleapis.com/v1beta/models?key=](https://generativelanguage.googleapis.com/v1beta/models?key=)" + gKey);
             let d = await res.json();
             if(res.ok && d.models) {
                 let txt = d.models.map(x => x.name).join('');
@@ -448,7 +449,7 @@
   async function processarImagemIA() {
     let mtr = document.getElementById('select-ia-motor').value;
     let key = mtr === 'groq' ? localStorage.getItem('groq_api_key') : localStorage.getItem('gemini_api_key');
-    if(!key) return alert("Chave API não encontrada para o motor: " + mtr.toUpperCase());
+    if(!key) return alert("Chave API não encontrada para o motor selecionado. Guarde nas Configurações.");
     
     let lid = document.getElementById('select-lider-ia-foto').value;
     if(!lid) return alert("Selecione o Líder.");
@@ -465,7 +466,7 @@
       let outText = "";
 
       if(mtr === 'groq') {
-          let req = await fetch('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
+          let req = await fetch('https://api.groq.com/openai/v1/chat/completions', {
               method: 'POST', headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
               body: JSON.stringify({
                   model: 'llama-3.2-11b-vision-preview',
@@ -482,7 +483,7 @@
           for(let m of mods) {
               try {
                   let ctl = new AbortController(); let tOut = setTimeout(() => ctl.abort(), 20000);
-                  let rr = await fetch("[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/)" + m + ":generateContent?key=" + key, {
+                  let rr = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + m + ":generateContent?key=" + key, {
                       method: 'POST', headers: {'Content-Type': 'application/json'}, signal: ctl.signal,
                       body: JSON.stringify({ contents: [{ parts: [{ text: pText }, { inline_data: { mime_type: 'image/jpeg', data: b64 } }] }] })
                   });
@@ -492,16 +493,16 @@
                   else { err = dt.error ? dt.error.message : "Status " + rr.status; }
               } catch(er) { err = er.message; }
           }
-          if(!suc) throw new Error("A sua chave Gemini bloqueou a imagem. Detalhe: " + err);
+          if(!suc) throw new Error("A sua chave Gemini bloqueou a imagem por restrição de rede/conta. Detalhe: " + err);
       }
       
       let clean = outText.replace(/```json/g, '').replace(/```/g, '').trim();
       loteEmConferencia = JSON.parse(clean);
       if(!Array.isArray(loteEmConferencia)) loteEmConferencia = [loteEmConferencia];
-      liderAtivo = lideres.find(x => x.id == lid); indiceAtual = 0; abrirFichaModal(0);
+      liderAtivo = lideres.find(x => x.id == lid); indiceAtual = 0; abrirFichaModal(indiceAtual);
       
     } catch(err) {
-      alert("ERRO IA:\n" + err.message);
+      alert("Aviso de Rede/IA:\n" + err.message + "\n\n💡 Dica: Se a IA direta falhar por bloqueio da operadora, use o botão 'Copiar Prompt para o Chat', envie a foto aqui para mim e use a Opção 2.");
     } finally {
       btn.innerText = "📷 Processar Ficha"; btn.disabled = false; fpt.value = '';
     }
