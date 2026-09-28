@@ -81,7 +81,7 @@
     <div class="field">
       <input type="password" id="input-senha-login" placeholder="A sua palavra-passe..." autocapitalize="off" style="text-transform: none; text-align: center;">
     </div>
-    <div id="login-erro" class="login-erro">Senha incorreta! Tente novamente.</div>
+    <div id="login-erro" class="login-erro" style="color:red; font-weight:bold; margin-top:10px;">Senha incorreta! Tente novamente.</div>
     <button class="btn success" style="margin-top: 20px;" onclick="fazerLogin()">Entrar no Sistema</button>
   </div>
 </div>
@@ -114,7 +114,6 @@
   </div>
 
   <div class="container">
-    <!-- Líderes -->
     <div id="tab-lideres" class="tab-content active">
       <div class="card">
         <h2>👤 Cadastrar Responsável</h2>
@@ -136,7 +135,6 @@
       </div>
     </div>
 
-    <!-- Cadastro Manual -->
     <div id="tab-cadastrar" class="tab-content">
       <div class="card">
         <h2>✍️ Cadastrar Pessoa (Manual)</h2>
@@ -157,7 +155,6 @@
       </div>
     </div>
 
-    <!-- Importar IA -->
     <div id="tab-importar" class="tab-content">
       <div class="card" style="border: 1px solid var(--primary);">
         <h2>🤖 Opção 1: Leitura IA (Híbrida)</h2>
@@ -177,7 +174,6 @@
       </div>
     </div>
 
-    <!-- Banco -->
     <div id="tab-banco" class="tab-content">
       <div class="card">
         <h2>🗂️ Banco de Dados (<span id="total-registos">0</span>)</h2>
@@ -187,7 +183,6 @@
       </div>
     </div>
 
-    <!-- Relatórios -->
     <div id="tab-relatorios" class="tab-content">
       <div class="card">
         <h2>🖨️ Impressão A4 (PDF)</h2>
@@ -205,7 +200,6 @@
       </div>
     </div>
 
-    <!-- Dashboard -->
     <div id="tab-graficos" class="tab-content">
       <div class="card">
         <h2>📊 Dashboard Interativo</h2>
@@ -218,7 +212,6 @@
       </div>
     </div>
 
-    <!-- Ferramentas -->
     <div id="tab-ferramentas" class="tab-content">
       <div class="card">
         <h2>📜 Histórico de Atualizações</h2>
@@ -271,11 +264,9 @@
 <script>
   window.onerror = function(m, u, l) { alert("ERRO DE CÓDIGO:\n" + m + "\nLinha: " + l); };
   
-  const VERSAO_ATUAL = "3.9.3";
-  const headerVersion = document.getElementById('header-version');
-  if (headerVersion) headerVersion.innerText = "v" + VERSAO_ATUAL;
-  const footerVersion = document.getElementById('footer-v-num');
-  if (footerVersion) footerVersion.innerText = VERSAO_ATUAL;
+  const VERSAO_ATUAL = "3.9.5";
+  document.getElementById('header-version').innerText = "v" + VERSAO_ATUAL;
+  document.getElementById('footer-v-num').innerText = VERSAO_ATUAL;
 
   const SENHA_ACESSO = "wini";
   let anoAtual = localStorage.getItem('anoAtual') || '2026';
@@ -300,12 +291,11 @@
   }
   
   function sairSistema() { sessionStorage.removeItem('auth_fichas'); checkAuth(); if(document.getElementById('drawer-menu').classList.contains('open')) toggleDrawer(); }
-  let iptLogin = document.getElementById('input-senha-login');
-  if(iptLogin) iptLogin.addEventListener('keypress', function(e){ if(e.key === 'Enter') fazerLogin(); });
+  document.getElementById('input-senha-login').addEventListener('keypress', function(e){ if(e.key === 'Enter') fazerLogin(); });
   checkAuth();
 
   function abrirChangelog() {
-    document.getElementById('changelog-content').innerHTML = '<div class="changelog-item"><div class="cl-versao">v3.9.3 <span class="cl-data">Atual</span></div><div class="cl-desc">Correção de estabilidade na tela de login e restauração do diagnóstico Gemini/Groq com indicadores verdes.</div></div>';
+    document.getElementById('changelog-content').innerHTML = '<div class="changelog-item"><div class="cl-versao">v3.9.5 <span class="cl-data">Atual</span></div><div class="cl-desc">Correção total do motor de login e isolamento de variáveis para evitar travamentos na inicialização.</div></div>';
     document.getElementById('modal-changelog').style.display = 'flex';
   }
 
@@ -671,20 +661,34 @@
     let l = document.createElement('a'); l.href = URL.createObjectURL(new Blob([JSON.stringify(b)], {type: 'application/json'})); l.download = 'backup_completo.json'; l.click();
   }
   
-  function importarBackupJSON(e) {
-    let f = e.target.files[0]; if(!f) return; let r = new FileReader();
-    r.onload = ev => {
-      try {
-        let d = JSON.parse(ev.target.result);
-        if(d.anos && d.d) {
-          if(confirm('Restaurar apaga tudo o que tem agora. Continuar?')) {
-            anosDisp = d.anos; localStorage.setItem('anosDisponiveis', JSON.stringify(anosDisp));
-            anosDisp.forEach(a => { localStorage.setItem('bd_lideres_' + a, JSON.stringify(d.d[a].l)); localStorage.setItem('bd_pessoas_' + a, JSON.stringify(d.d[a].p)); });
-            mudarAno(anosDisp[0]); alert('Backup Restaurado!');
+  let inputBackupEl = document.getElementById('input-backup');
+  if(inputBackupEl) {
+    inputBackupEl.addEventListener('change', function(e) {
+      let f = e.target.files[0]; if(!f) return;
+      let r = new FileReader();
+      r.onload = function(ev) {
+        try {
+          let d = JSON.parse(ev.target.result);
+          if(d.anos && d.d) {
+            if(confirm('Restaurar este backup vai substituir todos os dados atuais. Deseja continuar?')) {
+              anosDisp = d.anos; 
+              localStorage.setItem('anosDisponiveis', JSON.stringify(anosDisp));
+              anosDisp.forEach(a => { 
+                localStorage.setItem('bd_lideres_' + a, JSON.stringify(d.d[a].l || [])); 
+                localStorage.setItem('bd_pessoas_' + a, JSON.stringify(d.d[a].p || [])); 
+              });
+              mudarAno(anosDisp[0]); 
+              alert('Backup restaurado com sucesso!');
+            }
+          } else {
+            alert('O ficheiro selecionado não é um formato de backup válido.');
           }
+        } catch(err) { 
+          alert('Erro ao ler o ficheiro de backup JSON.'); 
         }
-      } catch(err) { alert('Erro no ficheiro JSON.'); }
-    }; r.readAsText(f);
+      }; 
+      r.readAsText(f);
+    });
   }
   
   function apagarAnoAtual() {
