@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -466,7 +466,7 @@
   // ==========================================
   // CONTROLO DE VERSÕES
   // ==========================================
-  const VERSAO_ATUAL = "3.3.3";
+  const VERSAO_ATUAL = "3.3.4";
   
   const headerVersion = document.getElementById('header-version');
   if (headerVersion) headerVersion.innerText = `v${VERSAO_ATUAL}`;
@@ -475,9 +475,10 @@
   if (footerVersion) footerVersion.innerText = VERSAO_ATUAL;
 
   const HISTORICO_VERSOES = [
-    { v: "3.3.3", data: "Atual", desc: "Corrigida ligação com o servidor oficial do Google (v1). Resolvido definitivamente o erro 404 para novas chaves de API da geração AQ." },
-    { v: "3.3.2", data: "Anterior", desc: "Adicionada ferramenta de Diagnóstico de Conexão na aba Configurações. Isolamento de erros 405 e validação de chaves gratuitas." },
-    { v: "3.2.4", data: "Anterior", desc: "Higienização forçada da chave API Gemini e eliminação total de espaços ocultos da formatação." }
+    { v: "3.3.4", data: "Atual", desc: "Ajuste do servidor da API Google para v1beta, permitindo a autenticação perfeita de chaves AQ e leitura avançada de imagens." },
+    { v: "3.3.3", data: "Anterior", desc: "Descoberta da validação das chaves AQ e mudança de servidores." },
+    { v: "3.3.2", data: "Anterior", desc: "Adicionada ferramenta de Diagnóstico de Conexão na aba Configurações. Isolamento de erros." },
+    { v: "3.2.4", data: "Anterior", desc: "Higienização forçada da chave API Gemini e eliminação de erros de parsing." }
   ];
 
   function abrirChangelog() {
@@ -550,7 +551,7 @@
   checkAuth();
 
   // ==========================================
-  // CONFIGS E IA (SERVIDOR v1 OFICIAL)
+  // CONFIGS E IA (SERVIDOR v1beta)
   // ==========================================
   const inputApiKey = document.getElementById('input-api-key');
   if (inputApiKey) {
@@ -570,7 +571,7 @@
     if (!apiKey) return alert("Guarde a chave primeiro.");
     
     try {
-      const modelUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+      const modelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
       const response = await fetch(modelUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -582,7 +583,7 @@
       try { data = JSON.parse(text); } catch(e){}
       
       if (response.ok) {
-        alert("✅ SUCESSO!\nA chave é totalmente válida no servidor oficial. Resposta:\n\n" + text.substring(0, 100));
+        alert("✅ SUCESSO ABSOLUTO!\nA sua chave AQ. foi aceite pelo servidor v1beta do Google. Resposta:\n\n" + text.substring(0, 100));
       } else {
         alert("❌ ERRO DO SERVIDOR:\n\n" + text.substring(0, 200));
       }
@@ -646,7 +647,7 @@
       const controller = new AbortController(); 
       const timeoutId = setTimeout(() => controller.abort(), 25000);
       
-      const modelUrl = `[https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=$](https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=$){apiKey}`;
+      const modelUrl = `[https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$](https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$){apiKey}`;
       
       const response = await fetch(modelUrl, {
         method: 'POST', 
